@@ -71,6 +71,7 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
         question: current.question,
         correctAnswer: current.answer,
         userAnswer: answer,
+        confidence,
       }),
     });
 
@@ -190,8 +191,11 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
         </div>
 
         <div className="mb-3">
-          <p className="text-xs font-semibold text-dg mb-2 uppercase tracking-wider">
-            Før du sjekker: hvor trygg føler du deg?
+          <p className="text-xs font-semibold text-dg mb-1 uppercase tracking-wider">
+            Før du sjekker: hvor trygg føler du deg på svaret ditt?
+          </p>
+          <p className="text-[11px] text-muted-foreground mb-2 leading-relaxed">
+            Tren deg på å forutse hvordan du ligger an — AI-en tar det med i vurderingen og sier om du traff på din egen selvvurdering.
           </p>
           <div className="flex gap-2">
             {CONFIDENCE_OPTIONS.map((opt) => {
@@ -206,9 +210,7 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
                       : "border-black/15 text-muted-foreground hover:border-gold/40 hover:text-dg"
                   }`}
                 >
-                  <span className="block font-semibold">
-                    {opt.value}. {opt.label}
-                  </span>
+                  <span className="block font-semibold">{opt.label}</span>
                   <span className="block text-[11px] opacity-70 mt-0.5 font-normal">{opt.hint}</span>
                 </button>
               );
@@ -235,11 +237,6 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
 
         {evaluation && (
           <div className="bg-white border border-black/8 rounded-md p-4 mb-4">
-            {confidence && (
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-3">
-                Du oppga {confidence}/3 i tiltro — les tilbakemeldingen og vurder selv
-              </p>
-            )}
             <Markdown text={evaluation} className="text-sm leading-relaxed text-gray-800" />
 
             <div className="flex gap-2.5 mt-4 pt-3 border-t border-black/6">
@@ -280,7 +277,9 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
 
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
             {chatHistory.length === 0 && (
-              <p className="text-xs text-muted-foreground italic text-center mt-4">Still et spørsmål om dette konseptet.</p>
+              <p className="text-xs text-muted-foreground italic text-center mt-4">
+                Be om et hint, forklar hva du tenker, eller still et spørsmål.
+              </p>
             )}
             {chatHistory.map((msg, i) => (
               <div
@@ -307,7 +306,7 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendChat()}
-              placeholder="Still et spørsmål…"
+              placeholder="Hint, tanke eller spørsmål…"
               className="flex-1 px-3 py-2 border border-black/15 rounded text-sm focus:outline-none focus:border-gold transition-colors"
             />
             <button

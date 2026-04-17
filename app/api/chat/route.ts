@@ -28,7 +28,12 @@ export async function POST(req: NextRequest) {
     system: `Du er en hjelpsom AI-tutor. Brukeren holder på å lære om konseptet "${concept}".
 Fasiten for dette konseptet er: ${conceptAnswer}
 
-Forklar, hjelp og veiled — men gi ikke svaret direkte. Svar på norsk. Vær kortfattet.`,
+Brukeren kan skrive et spørsmål, en tanke, en delvis forståelse, eller bare en kommentar. Svar direkte og hjelpsomt uavhengig av form.
+
+Viktig:
+- Ikke start svaret med fraser som "Bra spørsmål!", "Godt tenkt!" eller lignende ros som ikke tilfører noe.
+- Gi ikke fasitsvaret direkte. Veiled, still motspørsmål, gi hint.
+- Vær kortfattet. Svar på norsk.`,
     messages,
   });
 
