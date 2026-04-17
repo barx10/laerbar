@@ -62,10 +62,16 @@ export default function Navbar() {
                 className="object-contain"
               />
             </div>
-            <h2 className="font-heading text-xl text-dg mb-4">Om Lærerliv</h2>
+            <h2 className="font-heading text-xl text-dg mb-3">Om Lærbar</h2>
             <p className="text-sm text-gray-700 leading-relaxed mb-5">
-              Lærbar er laget av <strong>Kenneth Bareksten</strong> under Lærerliv — et prosjekt for bedre læringsverktøy.
+              Lærbar er et digitalt verktøy som bruker KI til å gjøre fagstoff om til interaktive læringsløp. Last opp en PDF, og bevis at du kan kjernekonseptene gjennom aktiv gjenkalling og umiddelbar tilbakemelding.
             </p>
+            <div className="border-t border-black/8 pt-4 mb-5">
+              <p className="text-sm font-semibold text-dg mb-1">Kenneth Bareksten</p>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Lærer og hobbyprogrammerer som lager digitale verktøy for å gjøre hverdagen litt enklere og mer kreativ.
+              </p>
+            </div>
             <div className="flex flex-col gap-2 text-sm">
               <a
                 href="https://www.laererliv.no"
