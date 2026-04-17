@@ -98,7 +98,7 @@ export default function CourseTabs({ course, onUpdate }: Props) {
   return (
     <div>
       {/* Tab-navigasjon — fagdykk-stil */}
-      <nav className="bg-mg flex border-b-2 border-gold overflow-x-auto">
+      <nav className="bg-mg flex border-b-2 border-gold overflow-x-auto scrollbar-hide">
         {TABS.map((tab) => (
           <button
             key={tab.id}

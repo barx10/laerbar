@@ -89,6 +89,13 @@
   --chart-5: #1a2e20;
 }
 
+@layer utilities {
+  .scrollbar-hide {
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
