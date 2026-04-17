@@ -133,7 +133,9 @@ export default function CourseTabs({ course, onUpdate }: Props) {
 
                 <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
                   {chatHistory.length === 0 && (
-                    <p className="text-xs text-muted-foreground italic text-center mt-4">Still et spørsmål om kurset.</p>
+                    <p className="text-xs text-muted-foreground italic text-center mt-4">
+                      Be om hjelp, forklar hva du tenker, eller still et spørsmål om kurset.
+                    </p>
                   )}
                   {chatHistory.map((msg, i) => (
                     <div
@@ -160,7 +162,7 @@ export default function CourseTabs({ course, onUpdate }: Props) {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendChat()}
-                    placeholder="Still et spørsmål…"
+                    placeholder="Hint, tanke eller spørsmål…"
                     className="flex-1 px-3 py-2 border border-black/15 rounded text-sm focus:outline-none focus:border-gold transition-colors"
                   />
                   <button
