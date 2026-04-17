@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateObject } from "ai";
+import { generateObject, generateText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
+
+const SOURCE_TEXT_CAP = 80 * 1024; // bytes of raw text we keep per kurs
 
 const ConceptSchema = z.object({
   title: z.string(),
@@ -42,21 +44,22 @@ export async function POST(req: NextRequest) {
   const google = createGoogleGenerativeAI({ apiKey });
   const model = google(modelId);
 
-  const { object } = await generateObject({
-    model,
-    schema: OutputSchema,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "file",
-            data: base64,
-            mediaType: "application/pdf",
-          },
-          {
-            type: "text",
-            text: `Du er en pedagogisk ekspert. Analyser dette fagstoffet og trekk ut de 5–10 viktigste kjernekonseptene.
+  const [conceptResult, sourceText] = await Promise.all([
+    generateObject({
+      model,
+      schema: OutputSchema,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "file",
+              data: base64,
+              mediaType: "application/pdf",
+            },
+            {
+              type: "text",
+              text: `Du er en pedagogisk ekspert. Analyser dette fagstoffet og trekk ut de 5–10 viktigste kjernekonseptene.
 
 For hvert konsept skal du lage:
 - Et klart konseptnavn (title)
@@ -69,11 +72,39 @@ For hvert konsept skal du lage:
 Lag et passe tittel for dokumentet (title).
 Spørsmålene skal utfordre til refleksjon — ikke bare "hva er X?" men "hvorfor/hvordan/hvilken sammenheng?"
 Svar på norsk.`,
-          },
-        ],
-      },
-    ],
-  });
+            },
+          ],
+        },
+      ],
+    }),
+    extractSourceText(model, base64),
+  ]);
 
-  return NextResponse.json(object);
+  return NextResponse.json({ ...conceptResult.object, source_text: sourceText });
+}
+
+async function extractSourceText(
+  model: ReturnType<ReturnType<typeof createGoogleGenerativeAI>>,
+  base64: string,
+): Promise<string> {
+  try {
+    const { text } = await generateText({
+      model,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "file", data: base64, mediaType: "application/pdf" },
+            {
+              type: "text",
+              text: `Returner det fulle tekstinnholdet fra dette dokumentet verbatim — ren tekst, uten oppsummering, kommentarer eller markdown. Ikke omformuler. Hopp gjerne over sidetall og kolontitler, men behold selve teksten.`,
+            },
+          ],
+        },
+      ],
+    });
+    return text.slice(0, SOURCE_TEXT_CAP);
+  } catch {
+    return "";
+  }
 }

@@ -56,6 +56,7 @@ export default function CourseTabs({ course, onUpdate }: Props) {
       body: JSON.stringify({
         courseTitle: course.title,
         concepts: course.concepts.map((c) => ({ title: c.title, answer: c.answer })),
+        sourceText: course.source_text ?? "",
         message: userMsg,
         history: chatHistory,
       }),

@@ -29,4 +29,5 @@ export interface Course {
   title: string;
   created_at: string;
   concepts: Concept[];
+  source_text?: string; // capped ~80KB — used by kurs-chat for artikkel-spesifikke spørsmål
 }
