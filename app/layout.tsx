@@ -19,6 +19,7 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Lærbar",
   description: "Last opp fagstoff og bevis at du kan det.",
+  icons: { icon: "/favicon.jpg" },
 };
 
 export default function RootLayout({
