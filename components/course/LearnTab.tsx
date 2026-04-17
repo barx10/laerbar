@@ -1,26 +1,35 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Concept } from "@/lib/types";
+import { Attempt, Concept } from "@/lib/types";
+import { applyFirstPass, isUnseen, today } from "@/lib/srs";
 import Markdown from "@/components/shared/Markdown";
 
 interface Props {
   concepts: Concept[];
-  onMastered: (id: string, firstReview: string) => void;
+  onConceptUpdate: (concept: Concept) => void;
 }
 
-function nextReviewDate(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().split("T")[0];
+type Confidence = 1 | 2 | 3;
+
+const CONFIDENCE_OPTIONS: { value: Confidence; label: string; hint: string }[] = [
+  { value: 1, label: "Usikker", hint: "Gjetter mer enn jeg kan" },
+  { value: 2, label: "Delvis", hint: "Kan noe, er litt usikker" },
+  { value: 3, label: "Trygg", hint: "Kan dette godt" },
+];
+
+function logAttempt(concept: Concept, confidence: Confidence, correct: boolean): Concept {
+  const attempt: Attempt = { date: today(), confidence, correct };
+  return { ...concept, attempts: [...(concept.attempts ?? []), attempt] };
 }
 
-export default function LearnTab({ concepts, onMastered }: Props) {
-  const currentIndex = concepts.findIndex((c) => !c.mastered);
+export default function LearnTab({ concepts, onConceptUpdate }: Props) {
+  const currentIndex = concepts.findIndex(isUnseen);
   const done = currentIndex === -1;
   const current = done ? null : concepts[currentIndex];
 
   const [answer, setAnswer] = useState("");
+  const [confidence, setConfidence] = useState<Confidence | null>(null);
   const [evaluation, setEvaluation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -34,8 +43,16 @@ export default function LearnTab({ concepts, onMastered }: Props) {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, chatLoading]);
 
+  function resetForNext() {
+    setAnswer("");
+    setConfidence(null);
+    setEvaluation(null);
+    setShowChat(false);
+    setChatHistory([]);
+  }
+
   async function evaluate() {
-    if (!current || !answer.trim()) return;
+    if (!current || !answer.trim() || !confidence) return;
     setLoading(true);
     setEvaluation(null);
 
@@ -71,6 +88,23 @@ export default function LearnTab({ concepts, onMastered }: Props) {
     }
 
     setLoading(false);
+  }
+
+  function confirmMastery() {
+    if (!current || !confidence) return;
+    const withAttempt = logAttempt(current, confidence, true);
+    const withFirstPass = applyFirstPass(withAttempt);
+    onConceptUpdate(withFirstPass);
+    resetForNext();
+  }
+
+  function markIncorrect() {
+    if (!current || !confidence) return;
+    const withAttempt = logAttempt(current, confidence, false);
+    onConceptUpdate(withAttempt);
+    setAnswer("");
+    setConfidence(null);
+    setEvaluation(null);
   }
 
   async function sendChat() {
@@ -124,29 +158,62 @@ export default function LearnTab({ concepts, onMastered }: Props) {
     return (
       <div className="text-center py-12">
         <div className="text-4xl mb-4">🎉</div>
-        <h2 className="font-heading text-xl text-dg mb-2">Alle konsepter mestret!</h2>
-        <p className="text-sm text-muted-foreground">Gå til Flashcards for å repetere, eller last ned som HTML.</p>
+        <h2 className="font-heading text-xl text-dg mb-2">Alle konsepter er bevist!</h2>
+        <p className="text-sm text-muted-foreground">
+          Nå står de i repetisjonskøen. Gå til Repeter for å bekrefte mestringen.
+        </p>
       </div>
     );
   }
 
+  const totalCount = concepts.length;
+  const unseenCount = concepts.filter(isUnseen).length;
+  const positionLabel = totalCount - unseenCount + 1;
+  const progressPct = ((totalCount - unseenCount) / totalCount) * 100;
+
   return (
     <div className={`flex gap-6 items-start ${showChat ? "max-w-5xl" : "max-w-2xl"}`}>
-      {/* Venstre: hovedinnhold */}
       <div className="flex-1 min-w-0">
         <div className="mb-1 text-xs text-muted-foreground font-medium uppercase tracking-wider">
-          Konsept {currentIndex + 1} av {concepts.length}
+          Konsept {positionLabel} av {totalCount}
         </div>
         <h2 className="font-heading text-xl text-dg mb-1">{current!.title}</h2>
         <div className="w-full bg-black/8 rounded-full h-1 mb-6">
           <div
             className="bg-gold h-1 rounded-full transition-all"
-            style={{ width: `${(currentIndex / concepts.length) * 100}%` }}
+            style={{ width: `${progressPct}%` }}
           />
         </div>
 
         <div className="bg-white rounded-md border border-black/8 p-5 mb-4">
           <p className="text-sm font-medium text-dg leading-relaxed">{current!.question}</p>
+        </div>
+
+        <div className="mb-3">
+          <p className="text-xs font-semibold text-dg mb-2 uppercase tracking-wider">
+            Før du sjekker: hvor trygg føler du deg?
+          </p>
+          <div className="flex gap-2">
+            {CONFIDENCE_OPTIONS.map((opt) => {
+              const selected = confidence === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setConfidence(opt.value)}
+                  className={`flex-1 px-3 py-2 rounded border text-xs font-medium transition-all text-left ${
+                    selected
+                      ? "border-gold bg-gold/10 text-dg"
+                      : "border-black/15 text-muted-foreground hover:border-gold/40 hover:text-dg"
+                  }`}
+                >
+                  <span className="block font-semibold">
+                    {opt.value}. {opt.label}
+                  </span>
+                  <span className="block text-[11px] opacity-70 mt-0.5 font-normal">{opt.hint}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <textarea
@@ -159,31 +226,31 @@ export default function LearnTab({ concepts, onMastered }: Props) {
 
         <button
           onClick={evaluate}
-          disabled={!answer.trim() || loading}
+          disabled={!answer.trim() || !confidence || loading}
           className="bg-dg text-cream px-7 py-2.5 rounded text-sm font-semibold hover:bg-mg transition-colors disabled:opacity-40 disabled:cursor-not-allowed mb-4"
+          title={!confidence ? "Velg tiltro først" : undefined}
         >
           {loading ? "Evaluerer…" : "Sjekk svaret"}
         </button>
 
         {evaluation && (
           <div className="bg-white border border-black/8 rounded-md p-4 mb-4">
+            {confidence && (
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-3">
+                Du oppga {confidence}/3 i tiltro — les tilbakemeldingen og vurder selv
+              </p>
+            )}
             <Markdown text={evaluation} className="text-sm leading-relaxed text-gray-800" />
 
             <div className="flex gap-2.5 mt-4 pt-3 border-t border-black/6">
               <button
-                onClick={() => {
-                  onMastered(current!.id, nextReviewDate(0));
-                  setAnswer("");
-                  setEvaluation(null);
-                  setShowChat(false);
-                  setChatHistory([]);
-                }}
+                onClick={confirmMastery}
                 className="bg-lg text-cream px-5 py-2 rounded text-xs font-semibold hover:bg-mg transition-colors"
               >
-                ✓ Mestret — neste konsept
+                ✓ Bevist — til repetisjon
               </button>
               <button
-                onClick={() => { setAnswer(""); setEvaluation(null); }}
+                onClick={markIncorrect}
                 className="border border-black/15 px-5 py-2 rounded text-xs text-muted-foreground hover:border-gold hover:text-dg transition-all"
               >
                 ↻ Prøv igjen
@@ -199,7 +266,6 @@ export default function LearnTab({ concepts, onMastered }: Props) {
         )}
       </div>
 
-      {/* Høyre: chat-panel */}
       {showChat && (
         <div className="w-80 shrink-0 sticky top-6 flex flex-col bg-white border border-black/8 rounded-md overflow-hidden" style={{ maxHeight: "calc(100vh - 140px)" }}>
           <div className="px-4 py-3 border-b border-black/6 flex justify-between items-center">

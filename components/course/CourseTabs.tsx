@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Course } from "@/lib/types";
+import { Concept, Course } from "@/lib/types";
 import ConceptMap from "./ConceptMap";
 import LearnTab from "./LearnTab";
 import FlashcardsTab from "./FlashcardsTab";
@@ -83,16 +83,11 @@ export default function CourseTabs({ course, onUpdate }: Props) {
     setChatLoading(false);
   }
 
-  function markMastered(conceptId: string, firstReview: string) {
-    const updated = {
+  function updateConcept(next: Concept) {
+    onUpdate({
       ...course,
-      concepts: course.concepts.map((c) =>
-        c.id === conceptId
-          ? { ...c, mastered: true, srs: { next_review: firstReview, interval: 1 } }
-          : c
-      ),
-    };
-    onUpdate(updated);
+      concepts: course.concepts.map((c) => (c.id === next.id ? next : c)),
+    });
   }
 
   return (
@@ -181,21 +176,10 @@ export default function CourseTabs({ course, onUpdate }: Props) {
           </div>
         )}
         {activeTab === "laer" && (
-          <LearnTab concepts={course.concepts} onMastered={markMastered} />
+          <LearnTab concepts={course.concepts} onConceptUpdate={updateConcept} />
         )}
         {activeTab === "repeter" && (
-          <RepetitionTab
-            concepts={course.concepts}
-            onUpdate={(id, srs) => {
-              const updated = {
-                ...course,
-                concepts: course.concepts.map((c) =>
-                  c.id === id ? { ...c, srs } : c
-                ),
-              };
-              onUpdate(updated);
-            }}
-          />
+          <RepetitionTab concepts={course.concepts} onGrade={updateConcept} />
         )}
         {activeTab === "flashcards" && (
           <FlashcardsTab concepts={course.concepts} />

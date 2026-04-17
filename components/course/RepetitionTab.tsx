@@ -2,64 +2,36 @@
 
 import { useState } from "react";
 import { Concept } from "@/lib/types";
+import {
+  applyGrade,
+  daysUntilNext,
+  Grade,
+  intervalFor,
+  isDue,
+  MASTERY_THRESHOLD,
+  sortDueQueue,
+} from "@/lib/srs";
 
 interface Props {
   concepts: Concept[];
-  onUpdate: (id: string, srs: { next_review: string; interval: number }) => void;
+  onGrade: (concept: Concept) => void;
 }
 
-function addDays(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + Math.round(days));
-  return d.toISOString().split("T")[0];
-}
-
-function isDue(concept: Concept): boolean {
-  if (!concept.mastered || !concept.srs) return false;
-  return concept.srs.next_review <= new Date().toISOString().split("T")[0];
-}
-
-function daysUntilNext(concepts: Concept[]): number | null {
-  const future = concepts
-    .filter((c) => c.mastered && c.srs && !isDue(c))
-    .map((c) => {
-      const diff = Math.ceil(
-        (new Date(c.srs!.next_review).getTime() - Date.now()) / 86400000
-      );
-      return diff;
-    });
-  if (future.length === 0) return null;
-  return Math.min(...future);
-}
-
-export default function RepetitionTab({ concepts, onUpdate }: Props) {
-  const due = concepts.filter(isDue);
+export default function RepetitionTab({ concepts, onGrade }: Props) {
+  const queue = sortDueQueue(concepts.filter(isDue).map((concept) => ({ concept })));
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [done, setDone] = useState(false);
 
-  const unmastered = concepts.filter((c) => !c.mastered).length;
+  const inReviewCount = concepts.filter((c) => c.srs).length;
   const nextDays = daysUntilNext(concepts);
 
-  function rate(grade: "igjen" | "usikkert" | "kunne") {
-    const concept = due[index];
-    const current = concept.srs!;
+  function rate(grade: Grade) {
+    const concept = queue[index].concept;
+    const next = applyGrade(concept, grade);
+    onGrade(next);
 
-    let newInterval: number;
-    if (grade === "igjen") {
-      newInterval = 1;
-    } else if (grade === "usikkert") {
-      newInterval = Math.max(2, current.interval * 1.5);
-    } else {
-      newInterval = Math.max(3, current.interval * 2.5);
-    }
-
-    onUpdate(concept.id, {
-      next_review: addDays(newInterval),
-      interval: newInterval,
-    });
-
-    if (index + 1 >= due.length) {
+    if (index + 1 >= queue.length) {
       setDone(true);
     } else {
       setFlipped(false);
@@ -67,23 +39,19 @@ export default function RepetitionTab({ concepts, onUpdate }: Props) {
     }
   }
 
-  // Ingen mestrende konsepter ennå
-  if (concepts.filter((c) => c.mastered).length === 0) {
+  if (inReviewCount === 0) {
     return (
       <div className="max-w-2xl text-center py-12">
         <div className="text-3xl mb-4 opacity-40">🔁</div>
         <h2 className="font-heading text-lg text-dg mb-2">Ingenting å repetere ennå</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          {unmastered > 0
-            ? `Mestre konseptene i Lær-fanen først — da dukker de opp her for repetisjon.`
-            : "Alle konsepter er mestret og repetert."}
+          Bevis først at du kan konseptene i Lær-fanen. Derfra legger de seg inn til repetisjon.
         </p>
       </div>
     );
   }
 
-  // Ferdig med dagens kort
-  if (done || due.length === 0) {
+  if (done || queue.length === 0) {
     return (
       <div className="max-w-2xl text-center py-12">
         <div className="text-3xl mb-4">✓</div>
@@ -91,7 +59,9 @@ export default function RepetitionTab({ concepts, onUpdate }: Props) {
           {done ? "Dagens repetisjon fullført!" : "Ingen kort klar i dag"}
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          {nextDays === 1
+          {nextDays === 0
+            ? "Neste kort blir klart senere i dag."
+            : nextDays === 1
             ? "Neste kort er klart i morgen."
             : nextDays
             ? `Neste kort er klart om ${nextDays} dager.`
@@ -101,7 +71,10 @@ export default function RepetitionTab({ concepts, onUpdate }: Props) {
     );
   }
 
-  const current = due[index];
+  const current = queue[index].concept;
+  const currentInterval = current.srs?.interval ?? 1;
+  const lapses = current.srs?.lapses ?? 0;
+  const confirmations = current.mastery_confirmations ?? 0;
 
   return (
     <div className="max-w-2xl">
@@ -109,15 +82,23 @@ export default function RepetitionTab({ concepts, onUpdate }: Props) {
         <div>
           <h2 className="font-heading text-xl text-dg mb-1">Repetisjon</h2>
           <p className="text-sm text-muted-foreground">
-            {index + 1} av {due.length} klar i dag
+            {index + 1} av {queue.length} klar i dag
           </p>
         </div>
-        <div className="text-xs text-muted-foreground border border-black/10 rounded px-3 py-1.5">
-          Intervall: {current.srs?.interval ?? 1} {current.srs?.interval === 1 ? "dag" : "dager"}
+        <div className="flex gap-2">
+          {lapses > 0 && (
+            <div className="text-xs text-red-700 border border-red-200 bg-red-50 rounded px-3 py-1.5">
+              {lapses} {lapses === 1 ? "bom" : "bommer"}
+            </div>
+          )}
+          <div className="text-xs text-muted-foreground border border-black/10 rounded px-3 py-1.5">
+            {confirmations < MASTERY_THRESHOLD
+              ? `${confirmations}/${MASTERY_THRESHOLD} bekreftet`
+              : "Mestret"}
+          </div>
         </div>
       </div>
 
-      {/* Kort med 3D-flip */}
       <div style={{ perspective: "1200px" }} className="mb-6">
         <div
           className="relative cursor-pointer select-none"
@@ -155,7 +136,6 @@ export default function RepetitionTab({ concepts, onUpdate }: Props) {
         </div>
       </div>
 
-      {/* Vurderingsknapper — vises kun etter flip */}
       {flipped ? (
         <div className="flex gap-3 justify-center">
           <button
@@ -163,7 +143,9 @@ export default function RepetitionTab({ concepts, onUpdate }: Props) {
             className="flex-1 border border-red-200 bg-red-50 text-red-700 py-2.5 rounded text-sm font-medium hover:bg-red-100 transition-colors"
           >
             Husket ikke
-            <span className="block text-xs font-normal opacity-70 mt-0.5">om 1 dag</span>
+            <span className="block text-xs font-normal opacity-70 mt-0.5">
+              om {intervalFor("igjen", currentInterval)} dag
+            </span>
           </button>
           <button
             onClick={() => rate("usikkert")}
@@ -171,7 +153,7 @@ export default function RepetitionTab({ concepts, onUpdate }: Props) {
           >
             Usikkert
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {Math.round(Math.max(2, (current.srs?.interval ?? 1) * 1.5))} dager
+              om {Math.round(intervalFor("usikkert", currentInterval))} dager
             </span>
           </button>
           <button
@@ -180,7 +162,7 @@ export default function RepetitionTab({ concepts, onUpdate }: Props) {
           >
             Kunne det
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {Math.round(Math.max(3, (current.srs?.interval ?? 1) * 2.5))} dager
+              om {Math.round(intervalFor("kunne", currentInterval))} dager
             </span>
           </button>
         </div>

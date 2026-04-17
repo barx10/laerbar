@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/shared/Navbar";
 import CourseTabs from "@/components/course/CourseTabs";
 import { getCourse, saveCourse } from "@/lib/storage";
+import { isInReview, isMastered } from "@/lib/srs";
 import { Course } from "@/lib/types";
 
 export default function CoursePage() {
@@ -25,6 +26,11 @@ export default function CoursePage() {
 
   if (!course) return null;
 
+  const mastered = course.concepts.filter(isMastered).length;
+  const inReview = course.concepts.filter(
+    (c) => isInReview(c) && !isMastered(c)
+  ).length;
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -37,7 +43,8 @@ export default function CoursePage() {
         </button>
         <h1 className="font-heading text-2xl text-dg">{course.title}</h1>
         <p className="text-xs text-muted-foreground mt-1 mb-0">
-          {new Date(course.created_at).toLocaleDateString("nb-NO")} · {course.concepts.filter((c) => c.mastered).length}/{course.concepts.length} konsepter mestret
+          {new Date(course.created_at).toLocaleDateString("nb-NO")} · {mastered}/{course.concepts.length} mestret
+          {inReview > 0 ? ` · ${inReview} under repetisjon` : ""}
         </p>
       </div>
       <CourseTabs course={course} onUpdate={handleUpdate} />
