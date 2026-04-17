@@ -23,34 +23,33 @@ export async function POST(req: NextRequest) {
 
   const confidenceLine =
     confidence && CONFIDENCE_LABEL[confidence]
-      ? `\nFør studenten svarte, oppga de selv at de følte seg ${CONFIDENCE_LABEL[confidence]} (${confidence}/3) på dette konseptet.`
+      ? `\nFør du svarte, oppga du selv at du følte deg ${CONFIDENCE_LABEL[confidence]} (${confidence}/3).`
       : "";
 
-  const calibrationStep = confidence
-    ? `
-3. Si kort om selvvurderingen deres stemte:
-   - Lav trygghet + godt svar → "Du kunne mer enn du trodde."
-   - Høy trygghet + svakt svar → "Du var tryggere enn grunnlaget tilsier — se på …"
-   - Ellers → "Godt kalibrert."`
+  const calibrationGuide = confidence
+    ? ` Vev inn en kort kommentar om selvvurderingen din — lav trygghet + godt svar ("du kunne mer enn du trodde"), høy trygghet + svakt svar ("du var tryggere enn grunnlaget tilsier"), eller "godt kalibrert" hvis det passer — men ikke som en egen overskrift, bare naturlig i teksten.`
     : "";
-
-  const finalStep = confidence ? "4" : "3";
 
   const result = streamText({
     model,
-    prompt: `Du er en lærer som evaluerer en students svar.
+    prompt: `Du er en erfaren lærer. Du henvender deg direkte til den som lærer, i du-form. Skriv aldri om "eleven", "studenten" eller "brukeren" i tredjeperson — snakk alltid til personen ("du har", "svaret ditt", "du kunne utdype").
 
 Konsept: ${concept}
 Spørsmål: ${question}
-Korrekt svar (fasit): ${correctAnswer}
-Students svar: ${userAnswer}${confidenceLine}
+Fasit (til din bruk, ikke siteres): ${correctAnswer}
+Svaret som ble skrevet: ${userAnswer}${confidenceLine}
 
-Evaluer svaret kortfattet (2–4 setninger):
-1. Hva studenten har riktig
-2. Hva som mangler eller er upresist${calibrationStep}
-${finalStep}. Avslutt med enten "✓ Du har vist god forståelse." ELLER "↻ Prøv å utdype [spesifikt punkt]."
+Skriv tilbakemeldingen som løpende prosa på 3–5 setninger. Ikke bruk kulepunkter. Ikke bruk overskrifter som "Hva du har riktig:", "Selvvurdering:" eller "Avslutning:". Skriv som om du snakker ansikt til ansikt.
 
-Vær konstruktiv og konkret. Svar på norsk.`,
+Tilbakemeldingen skal naturlig:
+- Anerkjenne konkret hva du fikk fram (bruk gjerne formuleringen din hvis mulig).
+- Trekke fram den ene viktigste svakheten eller det største hullet — ikke list opp alle.${calibrationGuide}
+
+Avslutt med én tydelig avslutningssetning på egen linje, uten kulepunkt:
+- "✓ Du har vist god forståelse." hvis svaret i hovedsak dekker kjernen.
+- "↻ Prøv å [konkret hva]." hvis det mangler noe vesentlig — og vær spesifikk i det som skal utdypes, ikke generisk.
+
+Vær konstruktiv, konkret og menneskelig. Skriv på norsk, alltid i du-form.`,
   });
 
   return result.toTextStreamResponse();
