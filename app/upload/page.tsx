@@ -48,6 +48,7 @@ export default function UploadPage() {
         id: crypto.randomUUID(),
         title: data.title,
         created_at: new Date().toISOString(),
+        source_text: typeof data.source_text === "string" ? data.source_text : "",
         concepts: data.concepts.map((c: Omit<Course["concepts"][0], "id" | "mastered">) => ({
           ...c,
           id: crypto.randomUUID(),
@@ -55,8 +56,17 @@ export default function UploadPage() {
         })),
       };
 
-      saveCourse(course);
-      router.push(`/course/${course.id}`);
+      try {
+        saveCourse(course);
+        router.push(`/course/${course.id}`);
+      } catch (err) {
+        const name = err instanceof Error || err instanceof DOMException ? err.name : "";
+        if (name === "QuotaExceededError" || name === "NS_ERROR_DOM_QUOTA_REACHED") {
+          setError("Nettleseren har ikke plass til flere kurs. Slett et gammelt kurs og prøv igjen.");
+        } else {
+          setError("Klarte ikke å lagre kurset. Prøv igjen.");
+        }
+      }
     } catch {
       setError("Noe gikk galt. Sjekk API-nøkkelen og prøv igjen.");
     } finally {
