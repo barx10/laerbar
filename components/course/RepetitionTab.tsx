@@ -6,7 +6,7 @@ import {
   applyGrade,
   daysUntilNext,
   Grade,
-  intervalFor,
+  previewInterval,
   isDue,
   MASTERY_THRESHOLD,
   sortDueQueue,
@@ -72,7 +72,6 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
   }
 
   const current = queue[index].concept;
-  const currentInterval = current.srs?.interval ?? 1;
   const lapses = current.srs?.lapses ?? 0;
   const confirmations = current.mastery_confirmations ?? 0;
 
@@ -144,7 +143,7 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
           >
             Husket ikke
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {intervalFor("igjen", currentInterval)} dag
+              om {previewInterval("igjen", current)} dag
             </span>
           </button>
           <button
@@ -153,7 +152,7 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
           >
             Usikkert
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {Math.round(intervalFor("usikkert", currentInterval))} dager
+              om {previewInterval("usikkert", current)} dager
             </span>
           </button>
           <button
@@ -162,7 +161,7 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
           >
             Kunne det
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {Math.round(intervalFor("kunne", currentInterval))} dager
+              om {previewInterval("kunne", current)} dager
             </span>
           </button>
         </div>

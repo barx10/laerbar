@@ -10,7 +10,7 @@ import {
   daysUntilNextAcrossCourses,
   DueItem,
   Grade,
-  intervalFor,
+  previewInterval,
   MASTERY_THRESHOLD,
 } from "@/lib/srs";
 import { Course } from "@/lib/types";
@@ -196,7 +196,6 @@ function ReviewCard({
   justMastered: string | null;
 }) {
   const { concept, course } = item;
-  const currentInterval = concept.srs?.interval ?? 1;
   const lapses = concept.srs?.lapses ?? 0;
   const confirmations = concept.mastery_confirmations ?? 0;
 
@@ -271,7 +270,7 @@ function ReviewCard({
           >
             Husket ikke
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {intervalFor("igjen", currentInterval)} dag
+              om {previewInterval("igjen", concept)} dag
             </span>
           </button>
           <button
@@ -280,7 +279,7 @@ function ReviewCard({
           >
             Usikkert
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {Math.round(intervalFor("usikkert", currentInterval))} dager
+              om {previewInterval("usikkert", concept)} dager
             </span>
           </button>
           <button
@@ -289,7 +288,7 @@ function ReviewCard({
           >
             Kunne det
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {Math.round(intervalFor("kunne", currentInterval))} dager
+              om {previewInterval("kunne", concept)} dager
             </span>
           </button>
         </div>
