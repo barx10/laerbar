@@ -19,6 +19,8 @@ export interface Concept {
     next_review: string; // ISO date
     interval: number;    // days until next review
     lapses?: number;
+    ease_factor?: number; // SM-2 ease factor, clamped to [1.3, ~2.7]
+    repetitions?: number; // successful reviews in a row (reset by "igjen")
   };
 }
 

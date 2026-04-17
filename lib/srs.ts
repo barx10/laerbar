@@ -2,7 +2,26 @@ import { Concept, Course } from "./types";
 
 export const MASTERY_THRESHOLD = 2;
 
+// SM-2 constants
+const EF_DEFAULT = 2.5;
+const EF_MIN = 1.3;
+
 export type Grade = "igjen" | "usikkert" | "kunne";
+
+// Ease-factor delta per grade, derived from classic SM-2 quality mapping
+// (igjen=q1 → -0.54, usikkert=q3 → -0.14, kunne=q5 → +0.10).
+function adjustEaseFactor(ef: number, grade: Grade): number {
+  const delta = grade === "kunne" ? 0.1 : grade === "usikkert" ? -0.14 : -0.54;
+  return Math.max(EF_MIN, ef + delta);
+}
+
+// Next interval in days. Reps is the count of successful reviews *before* this one.
+function nextInterval(grade: Grade, currentInterval: number, reps: number, newEf: number): number {
+  if (grade === "igjen") return 1;
+  if (reps === 0) return 3;
+  if (reps === 1) return 6;
+  return Math.max(currentInterval + 1, Math.round(currentInterval * newEf));
+}
 
 export function today(): string {
   return new Date().toISOString().split("T")[0];
@@ -40,28 +59,37 @@ export function daysUntilNext(concepts: Concept[]): number | null {
   return Math.min(...future);
 }
 
-export function intervalFor(grade: Grade, current: number): number {
-  if (grade === "igjen") return 1;
-  if (grade === "usikkert") return Math.max(2, current * 1.5);
-  return Math.max(3, current * 2.5);
+// Preview the next interval for a given grade without mutating state.
+// Used by RepetitionTab to label the "om N dager" hint on each button.
+export function previewInterval(grade: Grade, concept: Concept): number {
+  const srs = concept.srs;
+  if (!srs) return 1;
+  const ef = srs.ease_factor ?? EF_DEFAULT;
+  const reps = srs.repetitions ?? 0;
+  const newEf = adjustEaseFactor(ef, grade);
+  return nextInterval(grade, srs.interval, reps, newEf);
 }
 
-// Pure: compute next state of a concept given a review grade.
+// Pure: compute next state of a concept given a review grade (SM-2).
 export function applyGrade(concept: Concept, grade: Grade): Concept {
-  const current = concept.srs ?? { next_review: today(), interval: 1, lapses: 0 };
+  const current = concept.srs ?? {
+    next_review: today(),
+    interval: 1,
+    lapses: 0,
+    ease_factor: EF_DEFAULT,
+    repetitions: 0,
+  };
   const lapses = current.lapses ?? 0;
+  const ef = current.ease_factor ?? EF_DEFAULT;
+  const reps = current.repetitions ?? 0;
   const confirmations = concept.mastery_confirmations ?? 0;
 
-  const newInterval = intervalFor(grade, current.interval);
-  let newLapses = lapses;
-  let newConfirmations = confirmations;
-
-  if (grade === "igjen") {
-    newLapses = lapses + 1;
-    newConfirmations = 0;
-  } else if (grade === "kunne") {
-    newConfirmations = confirmations + 1;
-  }
+  const newEf = adjustEaseFactor(ef, grade);
+  const newInterval = nextInterval(grade, current.interval, reps, newEf);
+  const newReps = grade === "igjen" ? 0 : reps + 1;
+  const newLapses = grade === "igjen" ? lapses + 1 : lapses;
+  const newConfirmations =
+    grade === "kunne" ? confirmations + 1 : grade === "igjen" ? 0 : confirmations;
 
   return {
     ...concept,
@@ -71,6 +99,8 @@ export function applyGrade(concept: Concept, grade: Grade): Concept {
       next_review: addDays(newInterval),
       interval: newInterval,
       lapses: newLapses,
+      ease_factor: newEf,
+      repetitions: newReps,
     },
   };
 }
@@ -87,6 +117,8 @@ export function applyFirstPass(concept: Concept): Concept {
       next_review: today(),
       interval: 1,
       lapses: 0,
+      ease_factor: EF_DEFAULT,
+      repetitions: 0,
     },
   };
 }
@@ -132,9 +164,20 @@ export function migrateConcept(concept: Concept): Concept {
   const legacyMastered = !!concept.mastered;
   const confirmations =
     concept.mastery_confirmations ?? (legacyMastered ? MASTERY_THRESHOLD : 0);
-  const srs = concept.srs
-    ? { ...concept.srs, lapses: concept.srs.lapses ?? 0 }
-    : concept.srs;
+
+  let srs = concept.srs;
+  if (srs) {
+    // Estimate repetitions from existing interval so SM-2 picks up a sensible curve:
+    // interval ≤ 1 → 0 reps, < 6 → 1 rep, ≥ 6 → 2 reps (third review onward uses ef * interval).
+    const inferredReps = srs.interval <= 1 ? 0 : srs.interval < 6 ? 1 : 2;
+    srs = {
+      ...srs,
+      lapses: srs.lapses ?? 0,
+      ease_factor: srs.ease_factor ?? EF_DEFAULT,
+      repetitions: srs.repetitions ?? inferredReps,
+    };
+  }
+
   return {
     ...concept,
     mastered: confirmations >= MASTERY_THRESHOLD,
