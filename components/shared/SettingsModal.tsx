@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { exportBackup, importBackup, getCourses } from "@/lib/storage";
 
 const MODELS = [
   { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite" },
@@ -16,6 +17,8 @@ interface Props {
 export default function SettingsModal({ open, onClose }: Props) {
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState<string>(MODELS[0].id);
+  const [backupMsg, setBackupMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -37,6 +40,47 @@ export default function SettingsModal({ open, onClose }: Props) {
   function clearKey() {
     setApiKey("");
     localStorage.removeItem("laerbar_google_key");
+  }
+
+  function downloadBackup() {
+    try {
+      const json = exportBackup();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const date = new Date().toISOString().split("T")[0];
+      a.href = url;
+      a.download = `laerbar-backup-${date}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      const count = getCourses().length;
+      setBackupMsg({ kind: "ok", text: `${count} kurs lastet ned.` });
+    } catch {
+      setBackupMsg({ kind: "err", text: "Kunne ikke lage backup." });
+    }
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const result = importBackup(text, "merge");
+      setBackupMsg({
+        kind: "ok",
+        text:
+          result.imported === 0 && result.skipped > 0
+            ? `Ingen nye kurs (${result.skipped} fantes allerede).`
+            : `Importerte ${result.imported} kurs. Hoppet over ${result.skipped} duplikater.`,
+      });
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+      setBackupMsg({
+        kind: "err",
+        text: err instanceof Error ? err.message : "Ugyldig backup-fil.",
+      });
+    }
   }
 
   if (!open) return null;
@@ -131,6 +175,43 @@ export default function SettingsModal({ open, onClose }: Props) {
           >
             Avbryt
           </button>
+        </div>
+
+        <div className="mt-6 pt-5 border-t border-black/8">
+          <h3 className="font-heading text-base text-dg mb-1">Sikkerhetskopi</h3>
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+            Alle kurs lagres kun i nettleseren din. Last ned en backup jevnlig — hvis du tømmer nettleser-data uten backup, mister du alt.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={downloadBackup}
+              className="flex-1 border border-black/15 px-4 py-2 rounded text-xs font-medium text-dg hover:border-gold hover:text-dg transition-all"
+            >
+              ↓ Last ned backup
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 border border-black/15 px-4 py-2 rounded text-xs font-medium text-dg hover:border-gold hover:text-dg transition-all"
+            >
+              ↑ Importer backup
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={handleImport}
+            />
+          </div>
+          {backupMsg && (
+            <div
+              className={`text-xs mt-2.5 px-2.5 py-1.5 rounded ${
+                backupMsg.kind === "ok" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+              }`}
+            >
+              {backupMsg.text}
+            </div>
+          )}
         </div>
       </div>
     </div>
