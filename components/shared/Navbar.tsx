@@ -112,16 +112,19 @@ export default function Navbar() {
                 Nøkkelen får du gratis på <span className="text-dg font-medium">aistudio.google.com</span>.
               </Step>
               <Step n={2} title="Last opp fagstoff">
-                Trykk <strong>Nytt kurs</strong>, dra inn en PDF (maks 20 MB). AI analyserer og finner 5–10 kjernekonsepter.
+                Trykk <strong>Nytt kurs</strong> og dra inn en PDF (maks 20 MB). KI analyserer dokumentet og trekker ut 5–10 kjernekonsepter.
               </Step>
-              <Step n={3} title="Bevis at du kan det">
-                I <strong>Lær</strong>-fanen stiller AI deg ett åpent spørsmål om gangen. Skriv svaret med egne ord. AI gir deg umiddelbar tilbakemelding.
+              <Step n={3} title="Aktiv gjenkalling i Lær-fanen">
+                KI stiller ett åpent spørsmål om gangen. Skriv svaret med egne ord — ikke multiple choice. KI evaluerer svaret og du må bevise forståelse før neste konsept låses opp.
               </Step>
-              <Step n={4} title="Bruk hjelpemidlene">
-                Sliter du? Trykk <strong>Usikker? Spør AI-en</strong> for en hint-samtale. Flashcards-fanen lar deg repetere det du ikke har mestret ennå.
+              <Step n={4} title="Spør AI-en hvis du står fast">
+                Under evalueringen kan du trykke <strong>Usikker? Spør AI-en</strong> for en hint-samtale. KI gir deg ledetråder uten å røpe svaret direkte.
               </Step>
-              <Step n={5} title="Ta vare på kurset">
-                Last ned kurset som en selvinneholdt HTML-fil fra <strong>Last ned</strong>-fanen — åpnes offline når som helst.
+              <Step n={5} title="Repeter med spaced repetition">
+                <strong>Repeter</strong>-fanen viser konsepter som er klare for repetisjon basert på når du mestret dem. Jevnlig repetisjon forsterker langtidshukommelsen.
+              </Step>
+              <Step n={6} title="Flashcards og nedlasting">
+                <strong>Flashcards</strong>-fanen lar deg øve på kortformat. Last ned kurset som en selvinneholdt HTML-fil fra <strong>Last ned</strong>-fanen — åpnes offline når som helst.
               </Step>
             </div>
           </div>
