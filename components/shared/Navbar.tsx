@@ -112,19 +112,25 @@ export default function Navbar() {
                 Nøkkelen får du gratis på <span className="text-dg font-medium">aistudio.google.com</span>.
               </Step>
               <Step n={2} title="Last opp fagstoff">
-                Trykk <strong>Nytt kurs</strong> og dra inn en PDF (maks 20 MB). KI analyserer dokumentet og trekker ut 5–10 kjernekonsepter.
+                Trykk <strong>Nytt kurs</strong> og dra inn en PDF (maks 20 MB). KI trekker ut 5–10 kjernekonsepter og lagrer samtidig teksten så du senere kan spørre AI-en direkte om artikkelen.
               </Step>
-              <Step n={3} title="Aktiv gjenkalling i Lær-fanen">
-                KI stiller ett åpent spørsmål om gangen. Skriv svaret med egne ord — ikke multiple choice. KI evaluerer svaret og du må bevise forståelse før neste konsept låses opp.
+              <Step n={3} title="Lær: vurder selv før du sjekker">
+                I <strong>Lær</strong>-fanen får du ett åpent spørsmål om gangen. Før du sender svaret, velger du hvor trygg du er: <em>Usikker / Delvis / Trygg</em>. AI-en tar selvvurderingen med i tilbakemeldingen og sier om du traff — det trener deg til å kalibrere hva du faktisk kan.
               </Step>
-              <Step n={4} title="Spør AI-en hvis du står fast">
-                Under evalueringen kan du trykke <strong>Usikker? Spør AI-en</strong> for en hint-samtale. KI gir deg ledetråder uten å røpe svaret direkte.
+              <Step n={4} title="Mestret krever to bekreftelser">
+                Et konsept regnes som mestret først etter <strong>to</strong> vellykkede gjenkallinger — første i Lær, andre etter minst én dag i Repeter. Én riktig i farten er ikke nok: hukommelsen må prøves med mellomrom.
               </Step>
-              <Step n={5} title="Repeter med spaced repetition">
-                <strong>Repeter</strong>-fanen viser konsepter som er klare for repetisjon basert på når du mestret dem. Jevnlig repetisjon forsterker langtidshukommelsen.
+              <Step n={5} title="Dagens kø på forsiden">
+                Når kort forfaller viser forsiden en <strong>Dagens økt</strong>-knapp. Den blander kort på tvers av alle kurs (interleaving) og prioriterer kort du har bommet på før — det gir sterkere læring enn å gå ett kurs om gangen.
               </Step>
-              <Step n={6} title="Flashcards og nedlasting">
-                <strong>Flashcards</strong>-fanen lar deg øve på kortformat. Last ned kurset som en selvinneholdt HTML-fil fra <strong>Last ned</strong>-fanen — åpnes offline når som helst.
+              <Step n={6} title="Smart spacing i Repeter">
+                Hvert kort har en egen læringskurve. Svarer du <em>Kunne det</em> konsistent, vokser intervallet raskt (3 → 6 → 17 dager …). Svarer du <em>Husket ikke</em>, krymper det ned igjen. Du ser neste intervall på hver knapp før du velger.
+              </Step>
+              <Step n={7} title="Spør AI-en — to varianter">
+                I <strong>Lær</strong>: <em>Usikker? Spør AI-en</em> gir deg hint uten å røpe svaret mens du jobber med et konsept. I <strong>Oversikt</strong>: <em>Spør om kurset</em> svarer på frie spørsmål om selve artikkelen — forfatter, tall, definisjoner — basert på teksten som ble lagret ved opplasting.
+              </Step>
+              <Step n={8} title="Sikkerhetskopi og offline">
+                Alt ligger i nettleseren din, så ta jevnlig <strong>Last ned sikkerhetskopi</strong> under API-menyen. Et helt kurs kan også eksporteres som selvinneholdt HTML fra <strong>Last ned</strong>-fanen — åpnes offline når som helst.
               </Step>
             </div>
           </div>

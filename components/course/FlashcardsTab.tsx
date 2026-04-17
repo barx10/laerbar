@@ -20,21 +20,6 @@ export default function FlashcardsTab({ concepts }: Props) {
   function next() { setFlipped(false); setTimeout(() => setIndex((i) => (i + 1) % cards.length), 50); }
   function prev() { setFlipped(false); setTimeout(() => setIndex((i) => (i - 1 + cards.length) % cards.length), 50); }
 
-  async function exportAnki() {
-    const res = await fetch("/api/anki-export", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ concepts }),
-    });
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "laerbar-flashcards.txt";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   if (cards.length === 0) {
     return <p className="text-sm text-muted-foreground">Ingen flashcards tilgjengelig.</p>;
   }
@@ -48,12 +33,6 @@ export default function FlashcardsTab({ concepts }: Props) {
             {index + 1} av {cards.length} · {concepts.filter((c) => !c.mastered).length > 0 ? "Fokus på umestrerte konsepter" : "Alle konsepter"}
           </p>
         </div>
-        <button
-          onClick={exportAnki}
-          className="text-sm border border-black/15 px-4 py-2 rounded hover:border-gold hover:text-dg transition-all text-muted-foreground"
-        >
-          Eksporter til Anki
-        </button>
       </div>
 
       {/* 3D flip-kort */}
