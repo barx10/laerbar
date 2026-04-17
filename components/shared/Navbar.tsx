@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import SettingsModal from "./SettingsModal";
 
@@ -52,6 +53,15 @@ export default function Navbar() {
             >
               &times;
             </button>
+            <div className="mb-5">
+              <Image
+                src="/laererliv-logo.png"
+                alt="Lærerliv"
+                width={160}
+                height={60}
+                className="object-contain"
+              />
+            </div>
             <h2 className="font-heading text-xl text-dg mb-4">Om Lærerliv</h2>
             <p className="text-sm text-gray-700 leading-relaxed mb-5">
               Lærbar er laget av <strong>Kenneth Bareksten</strong> under Lærerliv — et prosjekt for bedre læringsverktøy.
