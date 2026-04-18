@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
             },
             {
               type: "text",
-              text: `Du er en pedagogisk ekspert. Analyser dette fagstoffet og trekk ut de 5–10 viktigste kjernekonseptene.
+              text: `Du er en pedagogisk ekspert. Analyser dette fagstoffet og trekk ut de 5 til 10 viktigste kjernekonseptene.
 
 For hvert konsept skal du lage:
 - Et klart konseptnavn (title)
@@ -70,7 +70,10 @@ For hvert konsept skal du lage:
 - Et kort svar for flashcard (flashcard_back)
 
 Lag et passe tittel for dokumentet (title).
-Spørsmålene skal utfordre til refleksjon — ikke bare "hva er X?" men "hvorfor/hvordan/hvilken sammenheng?"
+Spørsmålene skal utfordre til refleksjon, ikke bare "hva er X?" men "hvorfor/hvordan/hvilken sammenheng?"
+
+Ikke bruk tankestreker i noe felt. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
+
 Svar på norsk.`,
             },
           ],
@@ -97,7 +100,7 @@ async function extractSourceText(
             { type: "file", data: base64, mediaType: "application/pdf" },
             {
               type: "text",
-              text: `Returner det fulle tekstinnholdet fra dette dokumentet verbatim — ren tekst, uten oppsummering, kommentarer eller markdown. Ikke omformuler. Hopp gjerne over sidetall og kolontitler, men behold selve teksten.`,
+              text: `Returner det fulle tekstinnholdet fra dette dokumentet verbatim, altså ren tekst uten oppsummering, kommentarer eller markdown. Ikke omformuler. Hopp gjerne over sidetall og kolontitler, men behold selve teksten.`,
             },
           ],
         },

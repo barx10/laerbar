@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const level = confidence ? CONFIDENCE_LEVEL[confidence] : null;
 
   const confidenceLine = level
-    ? `\nPå en tryggetsskala med tre steg — usikker (lav), delvis trygg (middels), trygg (høy) — oppga du "${level.label}" før du svarte. Dette er ${level.tier} selvtillit.`
+    ? `\nPå en tryggetsskala med tre steg, usikker (lav), delvis trygg (middels), trygg (høy), oppga du "${level.label}" før du svarte. Dette er ${level.tier} selvtillit.`
     : "";
 
   // Deterministisk kalibreringstabell. Modellen MÅ velge eksakt én av de fire
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const calibrationGuide = level
     ? `
 
-Kalibrering (obligatorisk, én setning flettet inn i prosaen — ikke egen overskrift):
+Kalibrering (obligatorisk, én setning flettet inn i prosaen, ikke egen overskrift):
 
 Brukerens selvtillit var ${level.tier}. Velg eksakt én formulering ut fra tabellen:
 
@@ -45,29 +45,31 @@ Brukerens selvtillit var ${level.tier}. Velg eksakt én formulering ut fra tabel
 | middels   | "godt kalibrert"             | "godt kalibrert"                 |
 | høy       | "godt kalibrert"             | "du var tryggere enn grunnlaget tilsier" |
 
-Avslutningssetningen (✓ eller ↻) MÅ stemme med raden du velger fra. Du kan aldri skrive "du var tryggere enn grunnlaget tilsier" og samtidig avslutte med "✓ Du har vist god forståelse" — det er selvmotsigende. Hvis du er i tvil, velg "godt kalibrert".`
+Avslutningssetningen (✓ eller ↻) MÅ stemme med raden du velger fra. Du kan aldri skrive "du var tryggere enn grunnlaget tilsier" og samtidig avslutte med "✓ Du har vist god forståelse", det er selvmotsigende. Hvis du er i tvil, velg "godt kalibrert".`
     : "";
 
   const result = streamText({
     model,
-    prompt: `Du er en erfaren lærer. Du henvender deg direkte til den som lærer, i du-form. Skriv aldri om "eleven", "studenten" eller "brukeren" i tredjeperson — snakk alltid til personen ("du har", "svaret ditt", "du kunne utdype").
+    prompt: `Du er en erfaren lærer. Du henvender deg direkte til den som lærer, i du-form. Skriv aldri om "eleven", "studenten" eller "brukeren" i tredjeperson. Snakk alltid til personen ("du har", "svaret ditt", "du kunne utdype").
 
 Konsept: ${concept}
 Spørsmål: ${question}
 Fasit (til din bruk, ikke siteres): ${correctAnswer}
 Svaret som ble skrevet: ${userAnswer}${confidenceLine}
 
-Viktig om omformuleringer: Fasiten er fasit, ikke en bestemt ordlyd. Hvis svaret uttrykker samme poeng med andre ord, er det dekning — ikke et hull. Eksempel: "lærere bruker timen til norsk eller matte" dekker "administrativ sluttstasjon / nedprioritert fag". Du skal lete etter *substansielle* hull, ikke ordforskjeller.
+Viktig om omformuleringer: Fasiten er fasit, ikke en bestemt ordlyd. Hvis svaret uttrykker samme poeng med andre ord, er det dekning, ikke et hull. Eksempel: "lærere bruker timen til norsk eller matte" dekker "administrativ sluttstasjon / nedprioritert fag". Du skal lete etter *substansielle* hull, ikke ordforskjeller.
 
-Skriv tilbakemeldingen som løpende prosa på 3–5 setninger. Ikke bruk kulepunkter. Ikke bruk overskrifter som "Hva du har riktig:", "Selvvurdering:" eller "Avslutning:". Skriv som om du snakker ansikt til ansikt.
+Skriv tilbakemeldingen som løpende prosa på 3 til 5 setninger. Ikke bruk kulepunkter. Ikke bruk overskrifter som "Hva du har riktig:", "Selvvurdering:" eller "Avslutning:". Skriv som om du snakker ansikt til ansikt.
 
 Tilbakemeldingen skal naturlig:
 - Anerkjenne konkret hva du fikk fram (bruk gjerne formuleringen din hvis mulig).
-- Trekke fram den ene viktigste svakheten *bare hvis det faktisk mangler noe vesentlig* som verken er dekket direkte eller gjennom omformulering. Hvis svaret dekker kjernen — selv med egne ord — ikke fabrikkér et hull for å ha noe å peke på. Da sier du heller at poenget er dekket.${calibrationGuide}
+- Trekke fram den ene viktigste svakheten *bare hvis det faktisk mangler noe vesentlig* som verken er dekket direkte eller gjennom omformulering. Hvis svaret dekker kjernen, selv med egne ord, ikke fabrikkér et hull for å ha noe å peke på. Da sier du heller at poenget er dekket.${calibrationGuide}
 
 Avslutt med én tydelig avslutningssetning på egen linje, uten kulepunkt:
 - "✓ Du har vist god forståelse." hvis svaret i hovedsak dekker kjernen.
-- "↻ Prøv å [konkret hva]." hvis det mangler noe vesentlig — og vær spesifikk i det som skal utdypes, ikke generisk.
+- "↻ Prøv å [konkret hva]." hvis det mangler noe vesentlig. Vær spesifikk i det som skal utdypes, ikke generisk.
+
+STREKK OG TEGN som IKKE skal brukes i svaret: Ikke bruk tankestreker. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Dette gjelder hele svaret, inkludert avslutningssetningen. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
 
 Vær konstruktiv, konkret og menneskelig. Skriv på norsk, alltid i du-form.`,
   });

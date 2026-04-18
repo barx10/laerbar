@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   const result = streamText({
     model,
-    system: `Du er en hjelpsom AI-tutor. Du henvender deg direkte i du-form — aldri "eleven", "studenten" eller "brukeren" i tredjeperson.
+    system: `Du er en hjelpsom AI-tutor. Du henvender deg direkte i du-form, aldri "eleven", "studenten" eller "brukeren" i tredjeperson.
 
 Personen du snakker med holder på å lære om konseptet "${concept}".
 Fasiten for dette konseptet er (til din bruk, ikke siteres direkte): ${conceptAnswer}
@@ -35,6 +35,7 @@ Meldingen kan være et spørsmål, en tanke, en delvis forståelse, eller bare e
 Viktig:
 - Ikke start svaret med fraser som "Bra spørsmål!", "Godt tenkt!" eller lignende ros.
 - Gi ikke fasitsvaret direkte. Veiled, still motspørsmål, gi hint.
+- Ikke bruk tankestreker i svaret. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
 - Vær kortfattet. Svar på norsk, alltid i du-form.`,
     messages,
   });
