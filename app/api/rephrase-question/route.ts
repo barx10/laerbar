@@ -32,24 +32,25 @@ export async function POST(req: NextRequest) {
 
 Konsept: ${concept}
 Originalt spørsmål: ${question}
-Fasit (bevares — alle tre variantene må ha dette som gyldig svar): ${answer}
+Fasit (bevares. Alle tre variantene må ha dette som gyldig svar): ${answer}
 
 Lag tre ulike formuleringer. Bruk tre forskjellige vinkler fra denne listen:
 - "Forklar dette for en tiåring."
 - "Hva er motivasjonen bak ${concept.toLowerCase()}?"
 - "Hvordan vil du forklare ${concept.toLowerCase()} med et konkret eksempel?"
 - "Hva skiller ${concept.toLowerCase()} fra nære begreper?"
-- "Hva skjer hvis vi fjerner / overser ${concept.toLowerCase()}?"
+- "Hva skjer hvis vi fjerner eller overser ${concept.toLowerCase()}?"
 - "Hvorfor er ${concept.toLowerCase()} viktig i praksis?"
 
 Velg tre vinkler som faktisk passer konseptet (ikke tving fram vinkler som gir rart spørsmål).
 
 Krav:
-- Hver variant er ett spørsmål, maks ~180 tegn, kort nok til et flashcard.
+- Hver variant er ett spørsmål, maks ca. 180 tegn, kort nok til et flashcard.
 - Fasiten må fortsatt være et gyldig svar på hver variant.
 - Skriv på norsk.
 - Ikke inkluder svaret i spørsmålet.
-- Ikke nummerer variantene — returner dem som ren tekst.`,
+- Ikke nummerer variantene. Returner dem som ren tekst.
+- Ikke bruk tankestreker (em-dash — eller en-dash –) i noen variant. Bruk komma, punktum, kolon eller parenteser.`,
     });
 
     return NextResponse.json({ variants: result.object.variants });

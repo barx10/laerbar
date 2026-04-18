@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
       : "";
 
   const sourceBlock = trimmedSource
-    ? `\n\nKildetekst (ekstrahert fra det opplastede dokumentet — bruk dette som primærkilde for artikkel-spesifikke spørsmål som forfatter, årstall, antall studier, sitater, tall og definisjoner brukt i teksten):\n"""\n${trimmedSource}\n"""`
-    : `\n\nMerk: Selve kildedokumentet er ikke tilgjengelig i denne samtalen — bare kurstittel og kjernekonseptene over. Hvis du blir spurt om detaljer som krever teksten (f.eks. eksakte tall, forfatter, antall studier som ble sitert), si tydelig at du ikke har tilgang til dokumentet.`;
+    ? `\n\nKildetekst (ekstrahert fra det opplastede dokumentet. Bruk dette som primærkilde for artikkel-spesifikke spørsmål som forfatter, årstall, antall studier, sitater, tall og definisjoner brukt i teksten):\n"""\n${trimmedSource}\n"""`
+    : `\n\nMerk: Selve kildedokumentet er ikke tilgjengelig i denne samtalen, bare kurstittel og kjernekonseptene over. Hvis du blir spurt om detaljer som krever teksten (f.eks. eksakte tall, forfatter, antall studier som ble sitert), si tydelig at du ikke har tilgang til dokumentet.`;
 
   const messages = [
     ...(history ?? []).map((h: { role: string; text: string }) => ({
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   const result = streamText({
     model,
-    system: `Du er en hjelpsom AI-tutor. Du henvender deg direkte i du-form — aldri "eleven", "studenten" eller "brukeren" i tredjeperson.
+    system: `Du er en hjelpsom AI-tutor. Du henvender deg direkte i du-form, aldri "eleven", "studenten" eller "brukeren" i tredjeperson.
 
 Personen du snakker med studerer emnet "${courseTitle}".
 
@@ -56,9 +56,10 @@ Viktig:
 - Svar direkte på det som faktisk blir spurt om. Hvis spørsmålet er et faktaspørsmål (f.eks. "hvor lenge", "hva er", "når", "hvem") → gi svaret rett ut, kortfattet.
 - For artikkel-spesifikke spørsmål: bruk kildeteksten over som primærkilde. Ikke finn på forfattere, årstall eller tall som ikke står i teksten.
 - Hvis kildeteksten er avkuttet og spørsmålet kan handle om det som mangler, si det tydelig.
-- Ikke still motspørsmål bare for å være sokratisk — kun når spørsmålet er vagt eller åpent og du faktisk trenger å forstå hva personen vil.
+- Ikke still motspørsmål bare for å være sokratisk. Kun når spørsmålet er vagt eller åpent og du faktisk trenger å forstå hva personen vil.
 - Ikke start svaret med ros som "Bra spørsmål!", "Godt tenkt!" eller lignende.
-- Hvis du ikke vet noe sikkert, si det tydelig — ikke gjett.
+- Hvis du ikke vet noe sikkert, si det tydelig. Ikke gjett.
+- Ikke bruk tankestreker i svaret. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
 - Vær kortfattet og konkret. Svar på norsk, alltid i du-form.`,
     messages,
   });
