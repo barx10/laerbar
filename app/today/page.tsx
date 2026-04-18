@@ -12,6 +12,7 @@ import {
   Grade,
   previewInterval,
   MASTERY_THRESHOLD,
+  pickQuestionVariant,
 } from "@/lib/srs";
 import { Course } from "@/lib/types";
 
@@ -245,7 +246,7 @@ function ReviewCard({
               Spørsmål · klikk for å snu
             </p>
             <p className="font-heading text-lg text-dg text-center leading-relaxed">
-              {concept.flashcard_front}
+              {pickQuestionVariant(concept)}
             </p>
           </div>
           <div
