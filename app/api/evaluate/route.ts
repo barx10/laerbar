@@ -29,8 +29,23 @@ export async function POST(req: NextRequest) {
     ? `\nPå en tryggetsskala med tre steg — usikker (lav), delvis trygg (middels), trygg (høy) — oppga du "${level.label}" før du svarte. Dette er ${level.tier} selvtillit.`
     : "";
 
+  // Deterministisk kalibreringstabell. Modellen MÅ velge eksakt én av de fire
+  // cellene basert på (tier, dekker kjernen). "Dekker kjernen" = samme avgjørelse
+  // som avgjør om avslutningen blir ✓ eller ↻ — de to må stemme overens.
   const calibrationGuide = level
-    ? ` Vev inn én kort naturlig kommentar om kalibreringen. Brukerens selvtillit var ${level.tier}. Regler: lav selvtillit + godt svar → "du kunne mer enn du trodde"; høy selvtillit + svakt svar → "du var tryggere enn grunnlaget tilsier"; ellers → "godt kalibrert". Ikke bruk egen overskrift — skriv det naturlig inn i prosaen.`
+    ? `
+
+Kalibrering (obligatorisk, én setning flettet inn i prosaen — ikke egen overskrift):
+
+Brukerens selvtillit var ${level.tier}. Velg eksakt én formulering ut fra tabellen:
+
+| Selvtillit | Svaret dekker kjernen (→ ✓) | Svaret dekker ikke kjernen (→ ↻) |
+|-----------|------------------------------|----------------------------------|
+| lav       | "du kunne mer enn du trodde" | "godt kalibrert"                 |
+| middels   | "godt kalibrert"             | "godt kalibrert"                 |
+| høy       | "godt kalibrert"             | "du var tryggere enn grunnlaget tilsier" |
+
+Avslutningssetningen (✓ eller ↻) MÅ stemme med raden du velger fra. Du kan aldri skrive "du var tryggere enn grunnlaget tilsier" og samtidig avslutte med "✓ Du har vist god forståelse" — det er selvmotsigende. Hvis du er i tvil, velg "godt kalibrert".`
     : "";
 
   const result = streamText({
