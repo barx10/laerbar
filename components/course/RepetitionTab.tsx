@@ -9,6 +9,7 @@ import {
   previewInterval,
   isDue,
   MASTERY_THRESHOLD,
+  pickQuestionVariant,
   sortDueQueue,
 } from "@/lib/srs";
 
@@ -117,7 +118,7 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
               Spørsmål · klikk for å snu
             </p>
             <p className="font-heading text-lg text-dg text-center leading-relaxed">
-              {current.flashcard_front}
+              {pickQuestionVariant(current)}
             </p>
           </div>
 

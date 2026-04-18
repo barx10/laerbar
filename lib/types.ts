@@ -12,6 +12,7 @@ export interface Concept {
   hint: string;
   flashcard_front: string;
   flashcard_back: string;
+  question_variants?: string[]; // alternative formuleringer av flashcard_front, roteres i Repeter
   mastered: boolean;
   mastery_confirmations?: number;
   attempts?: Attempt[];

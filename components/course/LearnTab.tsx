@@ -23,6 +23,38 @@ function logAttempt(concept: Concept, confidence: Confidence, correct: boolean):
   return { ...concept, attempts: [...(concept.attempts ?? []), attempt] };
 }
 
+async function generateVariants(
+  concept: Concept,
+  onConceptUpdate: (c: Concept) => void,
+): Promise<void> {
+  if ((concept.question_variants?.length ?? 0) > 0) return;
+  try {
+    const apiKey = localStorage.getItem("laerbar_google_key") ?? "";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-2.5-flash-lite";
+    if (!apiKey) return;
+    const res = await fetch("/api/rephrase-question", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": apiKey,
+        "X-Model": model,
+      },
+      body: JSON.stringify({
+        concept: concept.title,
+        question: concept.flashcard_front,
+        answer: concept.flashcard_back,
+      }),
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as { variants?: string[] };
+    const variants = (data.variants ?? []).filter((v) => v.trim().length > 0);
+    if (variants.length === 0) return;
+    onConceptUpdate({ ...concept, question_variants: variants });
+  } catch {
+    // Stille — varianter er en berikelse, ikke kritisk for læringsflyt.
+  }
+}
+
 export default function LearnTab({ concepts, onConceptUpdate }: Props) {
   const currentIndex = concepts.findIndex(isUnseen);
   const done = currentIndex === -1;
@@ -96,6 +128,9 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
     const withAttempt = logAttempt(current, confidence, true);
     const withFirstPass = applyFirstPass(withAttempt);
     onConceptUpdate(withFirstPass);
+    // Fire-and-forget: be AI om tre alternative formuleringer så Repeter
+    // roterer ordlyden — hindrer at brukeren bare lærer én setning.
+    void generateVariants(withFirstPass, onConceptUpdate);
     resetForNext();
   }
 

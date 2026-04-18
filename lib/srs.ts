@@ -59,6 +59,18 @@ export function daysUntilNext(concepts: Concept[]): number | null {
   return Math.min(...future);
 }
 
+// Velg hvilken formulering av spørsmålet som vises i denne repetisjonen.
+// Bruker repetitions som deterministisk rotator: runde 0 → original flashcard_front,
+// runde 1 → variant[0], osv. Modulo total antall formuleringer. Faller tilbake til
+// flashcard_front hvis varianter ikke er generert enda (legacy / cold-start).
+export function pickQuestionVariant(concept: Concept): string {
+  const variants = concept.question_variants ?? [];
+  if (variants.length === 0) return concept.flashcard_front;
+  const reps = concept.srs?.repetitions ?? 0;
+  const pool = [concept.flashcard_front, ...variants];
+  return pool[reps % pool.length];
+}
+
 // Preview the next interval for a given grade without mutating state.
 // Used by RepetitionTab to label the "om N dager" hint on each button.
 export function previewInterval(grade: Grade, concept: Concept): number {
