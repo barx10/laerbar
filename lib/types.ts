@@ -30,5 +30,6 @@ export interface Course {
   title: string;
   created_at: string;
   concepts: Concept[];
-  source_text?: string; // capped ~80KB — used by kurs-chat for artikkel-spesifikke spørsmål
+  source_text?: string; // capped ~80KB, brukes av chat og sammendrag
+  summary?: string; // 2-3 setninger, AI-generert fra source_text, vises i Oversikt
 }
