@@ -21,7 +21,7 @@ const OutputSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const apiKey = req.headers.get("X-API-Key");
-  const modelId = req.headers.get("X-Model") ?? "gemini-2.5-flash-lite";
+  const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
 
   if (!apiKey) {
     return NextResponse.json({ error: "Mangler API-nøkkel" }, { status: 401 });
