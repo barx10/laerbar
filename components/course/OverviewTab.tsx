@@ -21,7 +21,6 @@ function statusOf(concept: Concept): Status {
 export default function OverviewTab({ course, onUpdate }: Props) {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(false);
-  const [showSource, setShowSource] = useState(false);
   const fetchedForCourseId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -92,24 +91,6 @@ export default function OverviewTab({ course, onUpdate }: Props) {
         <StatCard label="Mestret" value={mastered} tone="green" />
         <StatCard label="Klar i dag" value={dueToday} tone={dueToday > 0 ? "gold" : "neutral"} />
       </div>
-
-      {course.source_text && course.source_text.trim().length > 0 && (
-        <div className="mb-6">
-          <button
-            onClick={() => setShowSource((v) => !v)}
-            className="text-xs text-muted-foreground hover:text-dg transition-colors underline underline-offset-2"
-          >
-            {showSource ? "Skjul kildetekst" : "Les kildeteksten"}
-          </button>
-          {showSource && (
-            <div className="mt-3 bg-white border border-black/8 rounded-md p-4 max-h-96 overflow-y-auto">
-              <pre className="whitespace-pre-wrap text-xs leading-relaxed text-gray-700 font-sans">
-                {course.source_text}
-              </pre>
-            </div>
-          )}
-        </div>
-      )}
 
       <div className="mb-3">
         <h3 className="font-heading text-base text-dg mb-1">Kjernekonsepter</h3>
