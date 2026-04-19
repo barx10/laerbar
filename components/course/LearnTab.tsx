@@ -65,6 +65,11 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
   const [confidence, setConfidence] = useState<Confidence | null>(null);
   const [evaluation, setEvaluation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [elaborationQuestion, setElaborationQuestion] = useState<string | null>(null);
+  const [elaborationAnswer, setElaborationAnswer] = useState("");
+  const [elaborationFeedback, setElaborationFeedback] = useState<string | null>(null);
+  const [elaborationLoading, setElaborationLoading] = useState(false);
+  const [elaborationFeedbackLoading, setElaborationFeedbackLoading] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
@@ -79,6 +84,9 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     setAnswer("");
     setConfidence(null);
     setEvaluation(null);
+    setElaborationQuestion(null);
+    setElaborationAnswer("");
+    setElaborationFeedback(null);
     setChatHistory([]);
   }
 
@@ -138,6 +146,84 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     setAnswer("");
     setConfidence(null);
     setEvaluation(null);
+    setElaborationQuestion(null);
+    setElaborationAnswer("");
+    setElaborationFeedback(null);
+  }
+
+  async function startElaboration() {
+    if (!current) return;
+    setElaborationLoading(true);
+    setElaborationQuestion(null);
+    setElaborationAnswer("");
+    setElaborationFeedback(null);
+
+    const apiKey = localStorage.getItem("laerbar_google_key") ?? "";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-2.5-flash-lite";
+
+    try {
+      const res = await fetch("/api/elaborate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey,
+          "X-Model": model,
+        },
+        body: JSON.stringify({
+          concept: current.title,
+          question: current.question,
+          correctAnswer: current.answer,
+          userAnswer: answer,
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { question?: string };
+        if (data.question) setElaborationQuestion(data.question);
+      }
+    } finally {
+      setElaborationLoading(false);
+    }
+  }
+
+  async function submitElaboration() {
+    if (!current || !elaborationQuestion || !elaborationAnswer.trim()) return;
+    setElaborationFeedbackLoading(true);
+    setElaborationFeedback("");
+
+    const apiKey = localStorage.getItem("laerbar_google_key") ?? "";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-2.5-flash-lite";
+
+    const res = await fetch("/api/elaborate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": apiKey,
+        "X-Model": model,
+      },
+      body: JSON.stringify({
+        concept: current.title,
+        question: current.question,
+        correctAnswer: current.answer,
+        userAnswer: answer,
+        elaborationQuestion,
+        userElaboration: elaborationAnswer,
+      }),
+    });
+
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder();
+    let result = "";
+
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        result += decoder.decode(value, { stream: true });
+        setElaborationFeedback(result);
+      }
+    }
+
+    setElaborationFeedbackLoading(false);
   }
 
   async function sendChat() {
@@ -272,7 +358,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
           <div className="bg-white border border-black/8 rounded-md p-4 mb-4">
             <Markdown text={evaluation} className="text-sm leading-relaxed text-gray-800" />
 
-            <div className="flex gap-2.5 mt-4 pt-3 border-t border-black/6">
+            <div className="flex flex-wrap gap-2.5 mt-4 pt-3 border-t border-black/6">
               <button
                 onClick={confirmMastery}
                 className="bg-lg text-cream px-5 py-2 rounded text-xs font-semibold hover:bg-mg transition-colors"
@@ -285,7 +371,51 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
               >
                 ↻ Prøv igjen
               </button>
+              {!elaborationQuestion && (
+                <button
+                  onClick={startElaboration}
+                  disabled={elaborationLoading}
+                  className="border border-gold/40 text-dg px-5 py-2 rounded text-xs font-medium hover:bg-gold/10 transition-all disabled:opacity-40"
+                  title="Forankre forståelsen med ett utvidende spørsmål"
+                >
+                  {elaborationLoading ? "Henter spørsmål…" : "🧠 Gå dypere"}
+                </button>
+              )}
             </div>
+
+            {elaborationQuestion && (
+              <div className="mt-4 pt-4 border-t border-black/6">
+                <p className="text-[11px] font-semibold text-dg uppercase tracking-wider mb-2">
+                  Forankringsspørsmål
+                </p>
+                <p className="text-sm text-dg leading-relaxed mb-3">{elaborationQuestion}</p>
+
+                <textarea
+                  value={elaborationAnswer}
+                  onChange={(e) => setElaborationAnswer(e.target.value)}
+                  placeholder="Svar fritt — dette er kun for å forankre, ikke for poeng…"
+                  rows={3}
+                  disabled={elaborationFeedback !== null}
+                  className="w-full px-3 py-2 border border-black/15 rounded text-sm leading-relaxed resize-y focus:outline-none focus:border-gold transition-colors mb-2 disabled:bg-black/5"
+                />
+
+                {elaborationFeedback === null && (
+                  <button
+                    onClick={submitElaboration}
+                    disabled={!elaborationAnswer.trim() || elaborationFeedbackLoading}
+                    className="bg-dg text-cream px-5 py-2 rounded text-xs font-semibold hover:bg-mg transition-colors disabled:opacity-40"
+                  >
+                    {elaborationFeedbackLoading ? "Vurderer…" : "Send svar"}
+                  </button>
+                )}
+
+                {elaborationFeedback !== null && (
+                  <div className="mt-3 bg-gold/8 border border-gold/20 rounded p-3">
+                    <Markdown text={elaborationFeedback} className="text-sm leading-relaxed text-gray-800" />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
