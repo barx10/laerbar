@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Attempt, Concept } from "@/lib/types";
 import { applyFirstPass, isUnseen, today } from "@/lib/srs";
+import { logStudyToday } from "@/lib/study-log";
 import Markdown from "@/components/shared/Markdown";
 
 interface Props {
@@ -135,6 +136,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     const withAttempt = logAttempt(current, confidence, true);
     const withFirstPass = applyFirstPass(withAttempt);
     onConceptUpdate(withFirstPass);
+    logStudyToday();
     void generateVariants(withFirstPass, onConceptUpdate);
     resetForNext();
   }
@@ -143,6 +145,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     if (!current || !confidence) return;
     const withAttempt = logAttempt(current, confidence, false);
     onConceptUpdate(withAttempt);
+    logStudyToday();
     setAnswer("");
     setConfidence(null);
     setEvaluation(null);

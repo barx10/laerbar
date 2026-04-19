@@ -14,6 +14,7 @@ import {
   MASTERY_THRESHOLD,
   pickQuestionVariant,
 } from "@/lib/srs";
+import { logStudyToday } from "@/lib/study-log";
 import { Course } from "@/lib/types";
 
 export default function TodayPage() {
@@ -49,6 +50,7 @@ export default function TodayPage() {
   function rate(grade: Grade) {
     if (!current || !courses) return;
     const nextConcept = applyGrade(current.concept, grade);
+    logStudyToday();
 
     const courseIdx = courses.findIndex((c) => c.id === current.course.id);
     if (courseIdx >= 0) {

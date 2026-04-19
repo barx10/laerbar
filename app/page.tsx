@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/shared/Navbar";
+import StudyHeatmap from "@/components/shared/StudyHeatmap";
 import { getCourses, deleteCourse } from "@/lib/storage";
 import {
   dueCountAcrossCourses,
@@ -10,14 +11,17 @@ import {
   isInReview,
   isMastered,
 } from "@/lib/srs";
+import { getStudyLog, StudyLog } from "@/lib/study-log";
 import { Course } from "@/lib/types";
 
 export default function Home() {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [studyLog, setStudyLog] = useState<StudyLog>({});
 
   useEffect(() => {
     setCourses(getCourses());
+    setStudyLog(getStudyLog());
   }, []);
 
   function handleDelete(id: string) {
@@ -34,6 +38,8 @@ export default function Home() {
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-5 py-12">
+        {courses.length > 0 && <StudyHeatmap log={studyLog} />}
+
         {courses.length > 0 && (dueToday > 0 || anyInReview) && (
           <DailyQueue
             dueToday={dueToday}
