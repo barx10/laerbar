@@ -1,0 +1,108 @@
+"use client";
+
+import { addDays, getStreak, StudyLog } from "@/lib/study-log";
+import { today } from "@/lib/srs";
+
+interface Props {
+  log: StudyLog;
+  weeks?: number;
+}
+
+const CELL_PX = 12;
+const GAP_PX = 3;
+
+const WEEKDAY_LABELS = ["M", "T", "O", "T", "F", "L", "S"];
+
+function intensityClass(count: number): string {
+  if (count === 0) return "bg-black/6";
+  if (count <= 2) return "bg-gold/30";
+  if (count <= 5) return "bg-gold/60";
+  return "bg-gold";
+}
+
+function isoWeekdayIndex(iso: string): number {
+  const d = new Date(iso + "T00:00:00");
+  const js = d.getDay();
+  return js === 0 ? 6 : js - 1;
+}
+
+export default function StudyHeatmap({ log, weeks = 26 }: Props) {
+  const todayStr = today();
+  const streak = getStreak(todayStr);
+  const totalDays = weeks * 7;
+
+  const todayWeekdayIdx = isoWeekdayIndex(todayStr);
+  const startOffset = -(weeks - 1) * 7 - todayWeekdayIdx;
+
+  const cells: { date: string; count: number; future: boolean }[] = [];
+  for (let i = 0; i < totalDays; i++) {
+    const date = addDays(todayStr, startOffset + i);
+    cells.push({
+      date,
+      count: log[date] ?? 0,
+      future: date > todayStr,
+    });
+  }
+
+  const studiedToday = (log[todayStr] ?? 0) > 0;
+
+  return (
+    <div className="bg-white border border-black/8 rounded-md p-5 mb-6">
+      <div className="flex items-baseline justify-between mb-3 gap-4">
+        <div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Studieaktivitet</div>
+          {streak > 0 ? (
+            <div className="text-sm text-dg">
+              <span className="font-heading text-lg">🔥 {streak}</span>{" "}
+              <span className="text-muted-foreground">
+                {streak === 1 ? "dag på rad" : "dager på rad"}
+                {!studiedToday && " (studér i dag for å holde den)"}
+              </span>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              Ingen aktiv streak. Svar på ett kort for å starte.
+            </div>
+          )}
+        </div>
+        <div className="text-[10px] text-muted-foreground hidden sm:block">
+          Siste {weeks} uker
+        </div>
+      </div>
+
+      <div className="overflow-x-auto -mx-1 px-1">
+        <div className="flex gap-1.5 min-w-min">
+          <div className="flex flex-col" style={{ gap: GAP_PX }}>
+            {WEEKDAY_LABELS.map((d, i) => (
+              <div
+                key={i}
+                className="text-[9px] text-muted-foreground text-right w-3"
+                style={{ height: CELL_PX, lineHeight: `${CELL_PX}px` }}
+              >
+                {i % 2 === 1 ? d : ""}
+              </div>
+            ))}
+          </div>
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: `repeat(${weeks}, ${CELL_PX}px)`,
+              gridTemplateRows: `repeat(7, ${CELL_PX}px)`,
+              gridAutoFlow: "column",
+              gap: GAP_PX,
+            }}
+          >
+            {cells.map((cell, i) => (
+              <div
+                key={i}
+                className={`rounded-sm ${cell.future ? "bg-transparent" : intensityClass(cell.count)}`}
+                style={{ width: CELL_PX, height: CELL_PX }}
+                title={cell.future ? "" : `${cell.date}: ${cell.count} ${cell.count === 1 ? "registrering" : "registreringer"}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -12,6 +12,7 @@ import {
   pickQuestionVariant,
   sortDueQueue,
 } from "@/lib/srs";
+import { logStudyToday } from "@/lib/study-log";
 
 interface Props {
   concepts: Concept[];
@@ -31,6 +32,7 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
     const concept = queue[index].concept;
     const next = applyGrade(concept, grade);
     onGrade(next);
+    logStudyToday();
 
     if (index + 1 >= queue.length) {
       setDone(true);

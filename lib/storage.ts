@@ -1,5 +1,6 @@
 import { Course } from "./types";
 import { migrateCourse } from "./srs";
+import { getStudyLog, setStudyLog, StudyLog } from "./study-log";
 
 const STORAGE_KEY = "laerbar_courses";
 
@@ -35,9 +36,10 @@ export function deleteCourse(id: string): void {
 
 export function exportBackup(): string {
   const payload = {
-    version: 1,
+    version: 2,
     exported_at: new Date().toISOString(),
     courses: getCourses(),
+    study_log: getStudyLog(),
   };
   return JSON.stringify(payload, null, 2);
 }
@@ -57,9 +59,13 @@ export function importBackup(raw: string, mode: "merge" | "replace" = "merge"): 
   if (!incoming) throw new Error("Backup-fil mangler 'courses'.");
 
   const migrated = (incoming as Course[]).map(migrateCourse);
+  const incomingLog = (parsed?.study_log && typeof parsed.study_log === "object")
+    ? (parsed.study_log as StudyLog)
+    : null;
 
   if (mode === "replace") {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+    if (incomingLog) setStudyLog(incomingLog);
     return { imported: migrated.length, skipped: 0 };
   }
 
@@ -76,5 +82,14 @@ export function importBackup(raw: string, mode: "merge" | "replace" = "merge"): 
     imported++;
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(byId.values())));
+
+  if (incomingLog) {
+    const merged = { ...getStudyLog() };
+    for (const [day, count] of Object.entries(incomingLog)) {
+      merged[day] = Math.max(merged[day] ?? 0, count);
+    }
+    setStudyLog(merged);
+  }
+
   return { imported, skipped };
 }
