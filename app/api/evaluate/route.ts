@@ -63,9 +63,9 @@ Viktig om omformuleringer: Fasiten er fasit, ikke en bestemt ordlyd. Hvis svaret
 
 Skriv tilbakemeldingen som løpende prosa på 3 til 5 setninger. Ikke bruk kulepunkter. Ikke bruk overskrifter som "Hva du har riktig:", "Selvvurdering:" eller "Avslutning:". Skriv som om du snakker ansikt til ansikt.
 
-Tilbakemeldingen skal naturlig:
-- Anerkjenne konkret hva du fikk fram (bruk gjerne formuleringen din hvis mulig).
-- Trekke fram den ene viktigste svakheten *bare hvis det faktisk mangler noe vesentlig* som verken er dekket direkte eller gjennom omformulering. Hvis svaret dekker kjernen, selv med egne ord, ikke fabrikkér et hull for å ha noe å peke på. Da sier du heller at poenget er dekket.${calibrationGuide}
+Struktur:
+- Maks én anerkjennelse, kort og konkret, helt i starten (én setning, ikke flere lag med ros). Ingen overdrivelser ("strålende", "veldig bra"), ingen smil og emoji. Bare nøkternt hva som ble fanget.
+- Resten skal være konstruktiv. Hvis svaret mangler noe vesentlig (utover ren omformulering), pek på det konkret. Hvis svaret faktisk dekker kjernen, ikke fabrikkér et hull, men pek på hvor du kan skjerpe formuleringen, gå et hakk dypere, eller knytte poenget til noe annet i fagstoffet. Selv et godt svar har en strekkmuligheter.${calibrationGuide}
 
 Avslutt med én tydelig avslutningssetning på egen linje, uten kulepunkt:
 - "✓ Du har vist god forståelse." hvis svaret i hovedsak dekker kjernen.

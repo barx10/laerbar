@@ -79,7 +79,7 @@ export default function StudyHeatmap({ log, weeks = 26 }: Props) {
                 className="text-[9px] text-muted-foreground text-right w-3"
                 style={{ height: CELL_PX, lineHeight: `${CELL_PX}px` }}
               >
-                {i % 2 === 1 ? d : ""}
+                {i % 2 === 0 ? d : ""}
               </div>
             ))}
           </div>
