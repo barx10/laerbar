@@ -23,14 +23,21 @@ function nextInterval(grade: Grade, currentInterval: number, reps: number, newEf
   return Math.max(currentInterval + 1, Math.round(currentInterval * newEf));
 }
 
+function toLocalIso(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function today(): string {
-  return new Date().toISOString().split("T")[0];
+  return toLocalIso(new Date());
 }
 
 export function addDays(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + Math.round(days));
-  return d.toISOString().split("T")[0];
+  return toLocalIso(d);
 }
 
 export function isDue(concept: Concept): boolean {
