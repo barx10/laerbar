@@ -31,7 +31,7 @@ async function generateVariants(
   if ((concept.question_variants?.length ?? 0) > 0) return;
   try {
     const apiKey = localStorage.getItem("laerbar_google_key") ?? "";
-    const model = localStorage.getItem("laerbar_model") ?? "gemini-2.5-flash-lite";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.1-flash-lite-preview";
     if (!apiKey) return;
     const res = await fetch("/api/rephrase-question", {
       method: "POST",
@@ -96,7 +96,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     setEvaluation(null);
 
     const apiKey = localStorage.getItem("laerbar_google_key") ?? "";
-    const model = localStorage.getItem("laerbar_model") ?? "gemini-2.5-flash-lite";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.1-flash-lite-preview";
 
     const res = await fetch("/api/evaluate", {
       method: "POST",
@@ -159,7 +159,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     setElaborationFeedback(null);
 
     const apiKey = localStorage.getItem("laerbar_google_key") ?? "";
-    const model = localStorage.getItem("laerbar_model") ?? "gemini-2.5-flash-lite";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.1-flash-lite-preview";
 
     try {
       const res = await fetch("/api/elaborate", {
@@ -191,7 +191,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     setElaborationFeedback("");
 
     const apiKey = localStorage.getItem("laerbar_google_key") ?? "";
-    const model = localStorage.getItem("laerbar_model") ?? "gemini-2.5-flash-lite";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.1-flash-lite-preview";
 
     const res = await fetch("/api/elaborate", {
       method: "POST",
@@ -234,7 +234,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     setChatLoading(true);
 
     const apiKey = localStorage.getItem("laerbar_google_key") ?? "";
-    const model = localStorage.getItem("laerbar_model") ?? "gemini-2.5-flash-lite";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.1-flash-lite-preview";
 
     const res = await fetch("/api/chat", {
       method: "POST",

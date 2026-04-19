@@ -6,7 +6,7 @@ const NO_DASHES = `STREKK OG TEGN som IKKE skal brukes: Ikke bruk tankestreker. 
 
 export async function POST(req: NextRequest) {
   const apiKey = req.headers.get("X-API-Key");
-  const modelId = req.headers.get("X-Model") ?? "gemini-2.5-flash-lite";
+  const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
 
   if (!apiKey) {
     return new Response("Mangler API-nøkkel", { status: 401 });
@@ -40,6 +40,11 @@ Velg den varianten som vil gi sterkest læring for nettopp dette konseptet og sv
 ${NO_DASHES}
 
 Skriv på norsk.`,
+      providerOptions: {
+        google: {
+          thinkingConfig: { thinkingLevel: "minimal" },
+        },
+      },
     });
 
     return Response.json({ question: result.text.trim() });
@@ -63,6 +68,11 @@ Gi en kort, konkret tilbakemelding på 2 til 3 setninger. Anerkjenn det som er s
 ${NO_DASHES}
 
 Skriv som naturlig prosa på norsk.`,
+    providerOptions: {
+      google: {
+        thinkingConfig: { thinkingLevel: "minimal" },
+      },
+    },
   });
 
   return result.toTextStreamResponse();

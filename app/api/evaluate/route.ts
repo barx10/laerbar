@@ -12,7 +12,7 @@ const CONFIDENCE_LEVEL: Record<number, { label: string; tier: "lav" | "middels" 
 
 export async function POST(req: NextRequest) {
   const apiKey = req.headers.get("X-API-Key");
-  const modelId = req.headers.get("X-Model") ?? "gemini-2.5-flash-lite";
+  const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
 
   if (!apiKey) {
     return new Response("Mangler API-nøkkel", { status: 401 });
@@ -72,6 +72,11 @@ Avslutt med én tydelig avslutningssetning på egen linje, uten kulepunkt:
 STREKK OG TEGN som IKKE skal brukes i svaret: Ikke bruk tankestreker. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Dette gjelder hele svaret, inkludert avslutningssetningen. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
 
 Vær konstruktiv, konkret og menneskelig. Skriv på norsk, alltid i du-form.`,
+    providerOptions: {
+      google: {
+        thinkingConfig: { thinkingLevel: "minimal" },
+      },
+    },
   });
 
   return result.toTextStreamResponse();

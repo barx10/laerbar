@@ -6,7 +6,7 @@ const SOURCE_TEXT_PROMPT_CAP = 30 * 1024;
 
 export async function POST(req: NextRequest) {
   const apiKey = req.headers.get("X-API-Key");
-  const modelId = req.headers.get("X-Model") ?? "gemini-2.5-flash-lite";
+  const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
 
   if (!apiKey) {
     return new Response("Mangler API-nøkkel", { status: 401 });
@@ -56,6 +56,11 @@ Viktig:
 - Ikke bruk tankestreker i svaret. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
 - Vær kortfattet og konkret. Svar på norsk, alltid i du-form.`,
     messages,
+    providerOptions: {
+      google: {
+        thinkingConfig: { thinkingLevel: "minimal" },
+      },
+    },
   });
 
   return result.toTextStreamResponse();
