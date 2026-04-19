@@ -14,9 +14,9 @@ const GAP_PX = 3;
 const WEEKDAY_LABELS = ["M", "T", "O", "T", "F", "L", "S"];
 
 function intensityClass(count: number): string {
-  if (count === 0) return "bg-black/6";
-  if (count <= 2) return "bg-gold/30";
-  if (count <= 5) return "bg-gold/60";
+  if (count === 0) return "bg-black/8";
+  if (count <= 1) return "bg-gold/50";
+  if (count <= 3) return "bg-gold/75";
   return "bg-gold";
 }
 
