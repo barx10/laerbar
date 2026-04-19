@@ -7,6 +7,7 @@ import Markdown from "@/components/shared/Markdown";
 
 interface Props {
   concepts: Concept[];
+  sourceText?: string;
   onConceptUpdate: (concept: Concept) => void;
 }
 
@@ -55,7 +56,7 @@ async function generateVariants(
   }
 }
 
-export default function LearnTab({ concepts, onConceptUpdate }: Props) {
+export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Props) {
   const currentIndex = concepts.findIndex(isUnseen);
   const done = currentIndex === -1;
   const current = done ? null : concepts[currentIndex];
@@ -64,7 +65,6 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
   const [confidence, setConfidence] = useState<Confidence | null>(null);
   const [evaluation, setEvaluation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
@@ -79,7 +79,6 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
     setAnswer("");
     setConfidence(null);
     setEvaluation(null);
-    setShowChat(false);
     setChatHistory([]);
   }
 
@@ -128,8 +127,6 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
     const withAttempt = logAttempt(current, confidence, true);
     const withFirstPass = applyFirstPass(withAttempt);
     onConceptUpdate(withFirstPass);
-    // Fire-and-forget: be AI om tre alternative formuleringer så Repeter
-    // roterer ordlyden — hindrer at brukeren bare lærer én setning.
     void generateVariants(withFirstPass, onConceptUpdate);
     resetForNext();
   }
@@ -163,6 +160,7 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
       body: JSON.stringify({
         concept: current.title,
         conceptAnswer: current.answer,
+        sourceText: sourceText ?? "",
         message: userMsg,
         history: chatHistory,
       }),
@@ -208,7 +206,7 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
   const progressPct = ((totalCount - unseenCount) / totalCount) * 100;
 
   return (
-    <div className={`flex gap-6 items-start ${showChat ? "max-w-5xl" : "max-w-2xl"}`}>
+    <div className="flex gap-6 items-start max-w-6xl">
       <div className="flex-1 min-w-0">
         <div className="mb-1 text-xs text-muted-foreground font-medium uppercase tracking-wider">
           Konsept {positionLabel} av {totalCount}
@@ -287,73 +285,62 @@ export default function LearnTab({ concepts, onConceptUpdate }: Props) {
               >
                 ↻ Prøv igjen
               </button>
-              <button
-                onClick={() => setShowChat((v) => !v)}
-                className="border border-black/15 px-5 py-2 rounded text-xs text-muted-foreground hover:border-gold hover:text-dg transition-all ml-auto"
-              >
-                {showChat ? "Skjul chat" : "Usikker? Spør AI-en"}
-              </button>
             </div>
           </div>
         )}
       </div>
 
-      {showChat && (
-        <div className="w-80 shrink-0 sticky top-6 flex flex-col bg-white border border-black/8 rounded-md overflow-hidden" style={{ maxHeight: "calc(100vh - 140px)" }}>
-          <div className="px-4 py-3 border-b border-black/6 flex justify-between items-center">
-            <h3 className="font-heading text-sm text-dg">Spør om «{current!.title}»</h3>
-            <button
-              onClick={() => setShowChat(false)}
-              className="text-muted-foreground hover:text-dg transition-colors text-lg leading-none"
-            >
-              &times;
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
-            {chatHistory.length === 0 && (
-              <p className="text-xs text-muted-foreground italic text-center mt-4">
-                Be om et hint, forklar hva du tenker, eller still et spørsmål.
-              </p>
-            )}
-            {chatHistory.map((msg, i) => (
-              <div
-                key={i}
-                className={`text-sm rounded px-3 py-2 ${
-                  msg.role === "user"
-                    ? "bg-black/5 self-end ml-6 text-right"
-                    : "bg-gold/10 self-start mr-6"
-                }`}
-              >
-                {msg.role === "ai" ? (
-                  <Markdown text={msg.text} className="text-sm leading-relaxed" />
-                ) : (
-                  msg.text
-                )}
-              </div>
-            ))}
-            {chatLoading && <div className="text-xs text-muted-foreground italic">AI skriver…</div>}
-            <div ref={chatBottomRef} />
-          </div>
-
-          <div className="p-3 border-t border-black/6 flex gap-2">
-            <input
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendChat()}
-              placeholder="Hint, tanke eller spørsmål…"
-              className="flex-1 px-3 py-2 border border-black/15 rounded text-sm focus:outline-none focus:border-gold transition-colors"
-            />
-            <button
-              onClick={sendChat}
-              disabled={!chatInput.trim() || chatLoading}
-              className="bg-dg text-cream px-4 py-2 rounded text-sm hover:bg-mg transition-colors disabled:opacity-40"
-            >
-              Send
-            </button>
-          </div>
+      <div className="w-80 shrink-0 sticky top-6 flex flex-col bg-white border border-black/8 rounded-md overflow-hidden" style={{ maxHeight: "calc(100vh - 140px)" }}>
+        <div className="px-4 py-3 border-b border-black/6">
+          <h3 className="font-heading text-sm text-dg">Spør AI-en</h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Om konseptet eller noe fra artikkelen.
+          </p>
         </div>
-      )}
+
+        <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
+          {chatHistory.length === 0 && (
+            <p className="text-xs text-muted-foreground italic text-center mt-4 leading-relaxed">
+              Trenger du et hint, vil teste forståelsen din, eller lure på en detalj fra teksten? Spør her.
+            </p>
+          )}
+          {chatHistory.map((msg, i) => (
+            <div
+              key={i}
+              className={`text-sm rounded px-3 py-2 ${
+                msg.role === "user"
+                  ? "bg-black/5 self-end ml-6 text-right"
+                  : "bg-gold/10 self-start mr-6"
+              }`}
+            >
+              {msg.role === "ai" ? (
+                <Markdown text={msg.text} className="text-sm leading-relaxed" />
+              ) : (
+                msg.text
+              )}
+            </div>
+          ))}
+          {chatLoading && <div className="text-xs text-muted-foreground italic">AI skriver…</div>}
+          <div ref={chatBottomRef} />
+        </div>
+
+        <div className="p-3 border-t border-black/6 flex gap-2">
+          <input
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendChat()}
+            placeholder="Hint, tanke eller spørsmål…"
+            className="flex-1 px-3 py-2 border border-black/15 rounded text-sm focus:outline-none focus:border-gold transition-colors"
+          />
+          <button
+            onClick={sendChat}
+            disabled={!chatInput.trim() || chatLoading}
+            className="bg-dg text-cream px-4 py-2 rounded text-sm hover:bg-mg transition-colors disabled:opacity-40"
+          >
+            Send
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
