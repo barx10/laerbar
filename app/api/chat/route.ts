@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   const result = streamText({
     model,
-    system: `Du er en hjelpsom AI-tutor. Du henvender deg direkte i du-form, aldri "eleven", "studenten" eller "brukeren" i tredjeperson.
+    system: `Du er en hjelpsom AI-tutor for voksne som tilegner seg ny kunnskap. Du henvender deg direkte i du-form, aldri "eleven", "studenten" eller "brukeren" i tredjeperson.
 
 Personen du snakker med holder på å lære om konseptet "${concept}".
 Fasiten for dette konseptet er (til din bruk, ikke siteres direkte i sin helhet): ${conceptAnswer}${sourceBlock}

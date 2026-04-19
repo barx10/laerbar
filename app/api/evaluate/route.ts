@@ -50,7 +50,9 @@ Avslutningssetningen (✓ eller ↻) MÅ stemme med raden du velger fra. Du kan 
 
   const result = streamText({
     model,
-    prompt: `Du er en erfaren lærer. Du henvender deg direkte til den som lærer, i du-form. Skriv aldri om "eleven", "studenten" eller "brukeren" i tredjeperson. Snakk alltid til personen ("du har", "svaret ditt", "du kunne utdype").
+    prompt: `Du er en erfaren faglig veileder. Du henvender deg direkte til en voksen som tilegner seg ny kunnskap, i du-form. Skriv aldri om "eleven", "studenten" eller "brukeren" i tredjeperson. Snakk alltid til personen ("du har", "svaret ditt", "du kunne utdype").
+
+VIKTIG om perspektiv: Personen som svarer er ikke nødvendigvis subjektet i sitt eget svar. Hvis svaret handler om "elever", "pasienter", "kunder", "ansatte", "brukere" osv., så er dette innholdet i fagstoffet. Det er ikke en beskrivelse av personen du snakker med, og deres motivasjon, fremtid eller hverdag. Bevar subjektene som de står i svaret. Skriv aldri "din motivasjon" eller "din fremtid" når svaret faktisk handler om en tredje gruppe.
 
 Konsept: ${concept}
 Spørsmål: ${question}
