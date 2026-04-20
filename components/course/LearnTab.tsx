@@ -58,10 +58,6 @@ async function generateVariants(
 }
 
 export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Props) {
-  const currentIndex = concepts.findIndex(isUnseen);
-  const done = currentIndex === -1;
-  const current = done ? null : concepts[currentIndex];
-
   const [answer, setAnswer] = useState("");
   const [confidence, setConfidence] = useState<Confidence | null>(null);
   const [evaluation, setEvaluation] = useState<string | null>(null);
@@ -74,12 +70,29 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
+  const [sessionProven, setSessionProven] = useState<Concept[]>([]);
+  const [pendingChecks, setPendingChecks] = useState<Concept[]>([]);
+  const [checkAnswer, setCheckAnswer] = useState("");
+  const [checkRevealed, setCheckRevealed] = useState(false);
+
+  const currentIndex = concepts.findIndex(isUnseen);
+  const allLearned = currentIndex === -1;
+  const done = allLearned && pendingChecks.length === 0;
+  const current = allLearned ? null : concepts[currentIndex];
+  const checkConcept = pendingChecks[0] ?? null;
+  const inCheckMode = checkConcept !== null;
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, chatLoading]);
+
+  function dismissCheck() {
+    setPendingChecks((prev) => prev.slice(1));
+    setCheckAnswer("");
+    setCheckRevealed(false);
+  }
 
   function resetForNext() {
     setAnswer("");
@@ -138,6 +151,14 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     onConceptUpdate(withFirstPass);
     logStudyToday();
     void generateVariants(withFirstPass, onConceptUpdate);
+
+    const newSessionProven = [...sessionProven, current];
+    setSessionProven(newSessionProven);
+    if (newSessionProven.length >= 2 && newSessionProven.length % 2 === 0) {
+      const checkIdx = newSessionProven.length / 2 - 1;
+      setPendingChecks((prev) => [...prev, newSessionProven[checkIdx]]);
+    }
+
     resetForNext();
   }
 
@@ -275,6 +296,19 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     }
 
     setChatLoading(false);
+  }
+
+  if (inCheckMode) {
+    return (
+      <HurtigsjekCard
+        concept={checkConcept!}
+        answer={checkAnswer}
+        revealed={checkRevealed}
+        onAnswerChange={setCheckAnswer}
+        onReveal={() => setCheckRevealed(true)}
+        onDismiss={dismissCheck}
+      />
+    );
   }
 
   if (done) {
@@ -473,6 +507,83 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
             Send
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function HurtigsjekCard({
+  concept,
+  answer,
+  revealed,
+  onAnswerChange,
+  onReveal,
+  onDismiss,
+}: {
+  concept: Concept;
+  answer: string;
+  revealed: boolean;
+  onAnswerChange: (v: string) => void;
+  onReveal: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="flex gap-6 items-start max-w-6xl">
+      <div className="flex-1 min-w-0">
+        <div className="mb-1 text-xs text-muted-foreground font-medium uppercase tracking-wider">
+          Hurtigsjekk
+        </div>
+        <h2 className="font-heading text-xl text-dg mb-1">{concept.title}</h2>
+        <div className="w-full bg-black/8 rounded-full h-1 mb-6" />
+
+        <div className="bg-gold/8 rounded-md border border-gold/30 p-5 mb-4">
+          <p className="text-sm font-medium text-dg leading-relaxed">{concept.flashcard_front}</p>
+        </div>
+
+        <textarea
+          value={answer}
+          onChange={(e) => onAnswerChange(e.target.value)}
+          placeholder="Skriv svaret ditt her…"
+          rows={4}
+          className="w-full px-3.5 py-3 border border-black/15 rounded-md text-sm leading-relaxed resize-y focus:outline-none focus:border-gold transition-colors mb-3"
+        />
+
+        {!revealed ? (
+          <button
+            onClick={onReveal}
+            disabled={!answer.trim()}
+            className="bg-dg text-cream px-7 py-2.5 rounded text-sm font-semibold hover:bg-mg transition-colors disabled:opacity-40 disabled:cursor-not-allowed mb-4"
+          >
+            Vis svar
+          </button>
+        ) : (
+          <>
+            <div className="bg-white border border-black/8 rounded-md p-4 mb-4">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Fasit</p>
+              <p className="text-sm leading-relaxed text-gray-800">{concept.flashcard_back}</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={onDismiss}
+                className="flex-1 border border-red-200 bg-red-50 text-red-700 py-2.5 rounded text-sm font-medium hover:bg-red-100 transition-colors"
+              >
+                Husket ikke
+              </button>
+              <button
+                onClick={onDismiss}
+                className="flex-1 border border-gold/40 bg-gold/8 text-dg py-2.5 rounded text-sm font-medium hover:bg-gold/15 transition-colors"
+              >
+                Usikkert
+              </button>
+              <button
+                onClick={onDismiss}
+                className="flex-1 border border-lg/30 bg-green-50 text-lg py-2.5 rounded text-sm font-medium hover:bg-green-100 transition-colors"
+              >
+                Kunne det
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
