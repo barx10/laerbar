@@ -74,6 +74,8 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
+  const [sessionProven, setSessionProven] = useState<Concept[]>([]);
+  const [pendingChecks, setPendingChecks] = useState<Concept[]>([]);
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -138,6 +140,14 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     onConceptUpdate(withFirstPass);
     logStudyToday();
     void generateVariants(withFirstPass, onConceptUpdate);
+
+    const newSessionProven = [...sessionProven, current];
+    setSessionProven(newSessionProven);
+    if (newSessionProven.length >= 2 && newSessionProven.length % 2 === 0) {
+      const checkIdx = newSessionProven.length / 2 - 1;
+      setPendingChecks((prev) => [...prev, newSessionProven[checkIdx]]);
+    }
+
     resetForNext();
   }
 
