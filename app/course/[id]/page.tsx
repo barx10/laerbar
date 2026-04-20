@@ -39,7 +39,7 @@ export default function CoursePage() {
           onClick={() => router.push("/")}
           className="text-xs text-muted-foreground hover:text-dg transition-colors mb-3"
         >
-          ← Tilbake til oversikt
+          ← Forsiden
         </button>
         <h1 className="font-heading text-2xl text-dg">{course.title}</h1>
         <p className="text-xs text-muted-foreground mt-1 mb-0">

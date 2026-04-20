@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   try {
     const { text } = await generateText({
       model,
-      prompt: `Lag et kort sammendrag av teksten under. 2 til 3 setninger, løpende prosa, ingen kulepunkter eller overskrifter. Fang hovedtemaet og hovedargumentet, ikke bare tittelen. Du henvender deg i du-form.
+      prompt: `Lag et kort sammendrag av teksten under. 2 til 3 setninger, løpende prosa, ingen kulepunkter eller overskrifter. Fang hovedtemaet og hovedargumentet, ikke bare tittelen. Skriv objektivt i tredjeperson, som "Teksten argumenterer for..." eller "Forfatteren viser at..." eller "Artikkelen beskriver...". Ikke henvend deg til leseren og ikke bruk du-form.
 
 Ikke bruk tankestreker (em-dash — eller en-dash –). Bruk komma, punktum, kolon eller parenteser i stedet.
 
