@@ -11,6 +11,8 @@ interface Props {
 export default function LearningCurve({ courses, weeks = 26 }: Props) {
   const series = computeMasteryCurve(courses, weeks);
   const total = series[series.length - 1]?.count ?? 0;
+  const weekAgo = series[series.length - 8]?.count ?? 0;
+  const deltaWeek = total - weekAgo;
 
   return (
     <div className="bg-white border border-black/8 rounded-md p-5 mb-6">
@@ -29,10 +31,13 @@ export default function LearningCurve({ courses, weeks = 26 }: Props) {
         </div>
       ) : (
         <div className="text-sm text-dg">
-          <span className="font-heading text-lg">🌱 {total}</span>{" "}
-          <span className="text-muted-foreground">
+          <div>
+            <span className="font-heading text-lg">🌱 {total}</span>
+          </div>
+          <div className="text-muted-foreground text-xs mt-0.5">
             {total === 1 ? "konsept mestret" : "konsepter mestret"}
-          </span>
+            {deltaWeek > 0 && ` · +${deltaWeek} denne uka`}
+          </div>
         </div>
       )}
     </div>
