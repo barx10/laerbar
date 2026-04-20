@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/shared/Navbar";
 import StudyHeatmap from "@/components/shared/StudyHeatmap";
+import LearningCurve from "@/components/shared/LearningCurve";
 import { getCourses, deleteCourse } from "@/lib/storage";
 import {
   dueCountAcrossCourses,
@@ -39,6 +40,7 @@ export default function Home() {
 
       <div className="max-w-2xl mx-auto px-5 py-12">
         {courses.length > 0 && <StudyHeatmap log={studyLog} />}
+        {courses.length > 0 && <LearningCurve courses={courses} />}
 
         {courses.length > 0 && (dueToday > 0 || anyInReview) && (
           <DailyQueue
