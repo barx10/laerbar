@@ -20,7 +20,12 @@ interface Props {
 }
 
 export default function RepetitionTab({ concepts, onGrade }: Props) {
-  const queue = sortDueQueue(concepts.filter(isDue).map((concept) => ({ concept })));
+  // Snapshot køen ved mount. Hvis vi regner den ut på hver render, faller graderte
+  // konsepter ut av isDue-filteret, index kommer ut av synk med queue-lengden og
+  // queue[index] blir undefined → krasj.
+  const [queue] = useState(() =>
+    sortDueQueue(concepts.filter(isDue).map((concept) => ({ concept })))
+  );
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [done, setDone] = useState(false);
