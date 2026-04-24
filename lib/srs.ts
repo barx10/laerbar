@@ -19,7 +19,7 @@ function adjustEaseFactor(ef: number, grade: Grade): number {
 function nextInterval(grade: Grade, currentInterval: number, reps: number, newEf: number): number {
   if (grade === "igjen") return 1;
   if (reps === 0) return grade === "usikkert" ? 2 : 3;
-  if (reps === 1) return 6;
+  if (reps === 1) return grade === "usikkert" ? 4 : 6;
   return Math.max(currentInterval + 1, Math.round(currentInterval * newEf));
 }
 
