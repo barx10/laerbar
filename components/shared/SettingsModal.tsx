@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { exportBackup, importBackup, getCourses } from "@/lib/storage";
+import { useLanguage } from "@/lib/language-context";
 
 const MODELS = [
   { id: "gemini-3.1-flash-lite-preview", label: "Gemini 3.1 Flash Lite Preview" },
@@ -19,6 +20,7 @@ export default function SettingsModal({ open, onClose }: Props) {
   const [model, setModel] = useState<string>(MODELS[0].id);
   const [backupMsg, setBackupMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (open) {
@@ -54,9 +56,9 @@ export default function SettingsModal({ open, onClose }: Props) {
       a.click();
       URL.revokeObjectURL(url);
       const count = getCourses().length;
-      setBackupMsg({ kind: "ok", text: `${count} kurs lastet ned.` });
+      setBackupMsg({ kind: "ok", text: t.settingsBackupOk(count) });
     } catch {
-      setBackupMsg({ kind: "err", text: "Kunne ikke lage backup." });
+      setBackupMsg({ kind: "err", text: t.settingsBackupError });
     }
   }
 
@@ -71,14 +73,14 @@ export default function SettingsModal({ open, onClose }: Props) {
         kind: "ok",
         text:
           result.imported === 0 && result.skipped > 0
-            ? `Ingen nye kurs (${result.skipped} fantes allerede).`
-            : `Importerte ${result.imported} kurs. Hoppet over ${result.skipped} duplikater.`,
+            ? t.settingsNoneNew(result.skipped)
+            : t.settingsImportOk(result.imported, result.skipped),
       });
       setTimeout(() => window.location.reload(), 800);
     } catch (err) {
       setBackupMsg({
         kind: "err",
-        text: err instanceof Error ? err.message : "Ugyldig backup-fil.",
+        text: err instanceof Error ? err.message : t.settingsImportError,
       });
     }
   }
@@ -86,8 +88,8 @@ export default function SettingsModal({ open, onClose }: Props) {
   if (!open) return null;
 
   const keyStatus = apiKey.trim()
-    ? { label: `Nøkkel lagret (${apiKey.slice(0, 6)}...)`, ok: true }
-    : { label: "Ingen nøkkel lagret", ok: false };
+    ? { label: t.settingsKeySet(apiKey.slice(0, 6)), ok: true }
+    : { label: t.settingsKeyMissing, ok: false };
 
   return (
     <div
@@ -102,13 +104,13 @@ export default function SettingsModal({ open, onClose }: Props) {
           &times;
         </button>
 
-        <h2 className="font-heading text-xl text-dg mb-1.5">Innstillinger</h2>
+        <h2 className="font-heading text-xl text-dg mb-1.5">{t.settingsTitle}</h2>
         <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-          Legg inn din Google Gemini API-nøkkel. Nøkkelen lagres kun lokalt i nettleseren din.
+          {t.settingsDesc}
         </p>
 
         <div className="mb-5">
-          <h3 className="font-heading text-base text-dg mb-2">Google Gemini</h3>
+          <h3 className="font-heading text-base text-dg mb-2">{t.settingsGeminiSection}</h3>
 
           <div
             className={`text-xs mb-2.5 px-2.5 py-1.5 rounded ${
@@ -120,7 +122,7 @@ export default function SettingsModal({ open, onClose }: Props) {
             {keyStatus.label}
           </div>
 
-          <label className="text-xs font-semibold text-dg block mb-1">API-nøkkel</label>
+          <label className="text-xs font-semibold text-dg block mb-1">{t.settingsKeyLabel}</label>
           <div className="flex gap-2 mb-3">
             <input
               type="password"
@@ -132,13 +134,13 @@ export default function SettingsModal({ open, onClose }: Props) {
             <button
               onClick={clearKey}
               className="border border-black/15 rounded w-10 text-muted-foreground hover:border-red-400 hover:text-red-600 transition-all"
-              title="Fjern nøkkel"
+              title={t.settingsRemoveKey}
             >
               &times;
             </button>
           </div>
 
-          <label className="text-xs font-semibold text-dg block mb-2">Modell</label>
+          <label className="text-xs font-semibold text-dg block mb-2">{t.settingsModelLabel}</label>
           <div className="flex flex-col gap-1.5">
             {MODELS.map((m) => (
               <label
@@ -167,33 +169,33 @@ export default function SettingsModal({ open, onClose }: Props) {
             onClick={save}
             className="bg-dg text-cream px-6 py-2.5 rounded text-sm font-semibold hover:bg-mg transition-colors"
           >
-            Lagre
+            {t.settingsSave}
           </button>
           <button
             onClick={onClose}
             className="border border-black/15 px-6 py-2.5 rounded text-sm text-muted-foreground hover:border-gold hover:text-dg transition-all"
           >
-            Avbryt
+            {t.settingsCancel}
           </button>
         </div>
 
         <div className="mt-6 pt-5 border-t border-black/8">
-          <h3 className="font-heading text-base text-dg mb-1">Sikkerhetskopi</h3>
+          <h3 className="font-heading text-base text-dg mb-1">{t.settingsBackupTitle}</h3>
           <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-            Alle kurs lagres kun i nettleseren din. Last ned en backup jevnlig — hvis du tømmer nettleser-data uten backup, mister du alt.
+            {t.settingsBackupDesc}
           </p>
           <div className="flex gap-2">
             <button
               onClick={downloadBackup}
               className="flex-1 border border-black/15 px-4 py-2 rounded text-xs font-medium text-dg hover:border-gold hover:text-dg transition-all"
             >
-              ↓ Last ned backup
+              {t.settingsDownloadBackup}
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
               className="flex-1 border border-black/15 px-4 py-2 rounded text-xs font-medium text-dg hover:border-gold hover:text-dg transition-all"
             >
-              ↑ Importer backup
+              {t.settingsImportBackup}
             </button>
             <input
               ref={fileInputRef}
