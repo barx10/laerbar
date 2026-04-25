@@ -22,6 +22,7 @@ const OutputSchema = z.object({
 export async function POST(req: NextRequest) {
   const apiKey = req.headers.get("X-API-Key");
   const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
+  const lang = req.headers.get("X-Language") ?? "no";
 
   if (!apiKey) {
     return NextResponse.json({ error: "Mangler API-nøkkel" }, { status: 401 });
@@ -44,6 +45,40 @@ export async function POST(req: NextRequest) {
   const google = createGoogleGenerativeAI({ apiKey });
   const model = google(modelId);
 
+  const conceptPrompt = lang === "en"
+    ? `You are a pedagogical expert. Analyse this study material and extract the 5 to 10 most important core concepts.
+
+For each concept create:
+- A clear concept name (title)
+- An open question requiring understanding, not just recall (question)
+- A thorough answer with nuance and context (answer)
+- A clue that helps without revealing the answer (hint)
+- A short question for the flashcard front (flashcard_front)
+- A short answer for the flashcard back (flashcard_back)
+
+Create a fitting title for the document (title).
+Questions should challenge reflection, not just "what is X?" but "why / how / in what context?"
+
+Do not use dashes in any field — neither em-dash (—) nor en-dash (–). Use commas, periods, colons, or parentheses instead. Only regular hyphens (-) in compound words are allowed.
+
+Answer in English.`
+    : `Du er en pedagogisk ekspert. Analyser dette fagstoffet og trekk ut de 5 til 10 viktigste kjernekonseptene.
+
+For hvert konsept skal du lage:
+- Et klart konseptnavn (title)
+- Et åpent spørsmål som krever forståelse, ikke bare hukommelse (question)
+- Et utdypende svar med nyanser og kontekst (answer)
+- En ledetråd som hjelper uten å avsløre svaret (hint)
+- Et kort spørsmål for flashcard (flashcard_front)
+- Et kort svar for flashcard (flashcard_back)
+
+Lag et passe tittel for dokumentet (title).
+Spørsmålene skal utfordre til refleksjon, ikke bare "hva er X?" men "hvorfor/hvordan/hvilken sammenheng?"
+
+Ikke bruk tankestreker i noe felt. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
+
+Svar på norsk.`;
+
   const [conceptResult, sourceText] = await Promise.all([
     generateObject({
       model,
@@ -59,22 +94,7 @@ export async function POST(req: NextRequest) {
             },
             {
               type: "text",
-              text: `Du er en pedagogisk ekspert. Analyser dette fagstoffet og trekk ut de 5 til 10 viktigste kjernekonseptene.
-
-For hvert konsept skal du lage:
-- Et klart konseptnavn (title)
-- Et åpent spørsmål som krever forståelse, ikke bare hukommelse (question)
-- Et utdypende svar med nyanser og kontekst (answer)
-- En ledetråd som hjelper uten å avsløre svaret (hint)
-- Et kort spørsmål for flashcard (flashcard_front)
-- Et kort svar for flashcard (flashcard_back)
-
-Lag et passe tittel for dokumentet (title).
-Spørsmålene skal utfordre til refleksjon, ikke bare "hva er X?" men "hvorfor/hvordan/hvilken sammenheng?"
-
-Ikke bruk tankestreker i noe felt. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
-
-Svar på norsk.`,
+              text: conceptPrompt,
             },
           ],
         },
