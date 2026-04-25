@@ -16,7 +16,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem("laerbar_lang") as Lang | null;
-    if (stored === "en" || stored === "no") setLangState(stored);
+    if (stored === "en" || stored === "no") {
+      setLangState(stored);
+      document.documentElement.lang = stored;
+    }
   }, []);
 
   function setLang(l: Lang) {
