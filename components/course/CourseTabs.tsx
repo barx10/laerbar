@@ -2,21 +2,14 @@
 
 import { useState } from "react";
 import { Concept, Course } from "@/lib/types";
+import { useLanguage } from "@/lib/language-context";
 import OverviewTab from "./OverviewTab";
 import LearnTab from "./LearnTab";
 import FlashcardsTab from "./FlashcardsTab";
 import RepetitionTab from "./RepetitionTab";
 import DownloadTab from "./DownloadTab";
 
-const TABS = [
-  { id: "oversikt", label: "Oversikt" },
-  { id: "laer", label: "Lær" },
-  { id: "repeter", label: "Repeter" },
-  { id: "flashcards", label: "Flashcards" },
-  { id: "last-ned", label: "Last ned" },
-] as const;
-
-type TabId = typeof TABS[number]["id"];
+type TabId = "oversikt" | "laer" | "repeter" | "flashcards" | "last-ned";
 
 interface Props {
   course: Course;
@@ -25,6 +18,14 @@ interface Props {
 
 export default function CourseTabs({ course, onUpdate }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("oversikt");
+  const { t } = useLanguage();
+  const TABS = [
+    { id: "oversikt" as const, label: t.tabOversikt },
+    { id: "laer" as const, label: t.tabLaer },
+    { id: "repeter" as const, label: t.tabRepeter },
+    { id: "flashcards" as const, label: t.tabFlashcards },
+    { id: "last-ned" as const, label: t.tabLastNed },
+  ];
 
   function updateConcept(next: Concept) {
     onUpdate({
