@@ -1,12 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useLanguage } from "@/lib/language-context";
 
 interface Props {
   onFile: (file: File) => void;
 }
 
 export default function UploadZone({ onFile }: Props) {
+  const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [chosen, setChosen] = useState<string>("");
@@ -45,9 +47,9 @@ export default function UploadZone({ onFile }: Props) {
         />
         <div className="text-4xl mb-2.5 opacity-50">📄</div>
         <div className="text-sm text-muted-foreground leading-relaxed">
-          Klikk eller dra hit · PDF (maks 20MB)
+          {t.uploadInstruction}
           <br />
-          <span className="text-xs opacity-70">Kun tekst leses — illustrasjoner analyseres ikke</span>
+          <span className="text-xs opacity-70">{t.uploadSubtext}</span>
         </div>
       </div>
 
