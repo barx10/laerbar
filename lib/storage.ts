@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { Course } from "./types";
 import { migrateCourse } from "./srs";
 import { getStudyLog, setStudyLog, StudyLog } from "./study-log";
@@ -5,6 +6,58 @@ import { getStudyLog, setStudyLog, StudyLog } from "./study-log";
 const COURSE_KEY_PREFIX = "laerbar_course_";
 const COURSE_INDEX_KEY = "laerbar_course_index";
 const LEGACY_COURSES_KEY = "laerbar_courses";
+
+// Permissive schemas: optional everything that migrateCourse fills in, so
+// older backup shapes still pass validation and get repaired on the way in.
+const AttemptSchema = z.object({
+  date: z.string(),
+  confidence: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  correct: z.boolean(),
+});
+
+const SrsSchema = z.object({
+  next_review: z.string(),
+  interval: z.number(),
+  lapses: z.number().optional(),
+  ease_factor: z.number().optional(),
+  repetitions: z.number().optional(),
+});
+
+const ConceptSchema = z.object({
+  id: z.string().min(1),
+  title: z.string(),
+  question: z.string(),
+  answer: z.string(),
+  hint: z.string(),
+  flashcard_front: z.string(),
+  flashcard_back: z.string(),
+  question_variants: z.array(z.string()).optional(),
+  mastered: z.boolean().optional(),
+  mastery_confirmations: z.number().optional(),
+  attempts: z.array(AttemptSchema).optional(),
+  srs: SrsSchema.optional(),
+});
+
+const CourseSchema = z.object({
+  id: z.string().min(1),
+  title: z.string(),
+  created_at: z.string(),
+  concepts: z.array(ConceptSchema).min(1),
+  source_text: z.string().optional(),
+  summary: z.string().optional(),
+});
+
+const StudyLogSchema = z.record(z.string(), z.number());
+
+const BackupEnvelopeSchema = z.union([
+  z.array(z.unknown()),
+  z.object({
+    version: z.number().optional(),
+    exported_at: z.string().optional(),
+    courses: z.array(z.unknown()),
+    study_log: z.unknown().optional(),
+  }),
+]);
 
 function courseKey(id: string): string {
   return COURSE_KEY_PREFIX + id;
@@ -138,6 +191,7 @@ export function exportBackup(): string {
 export interface ImportResult {
   imported: number;
   skipped: number;
+  invalid: number;
 }
 
 function clearAllCourses(): void {
@@ -150,37 +204,78 @@ function clearAllCourses(): void {
   localStorage.removeItem(COURSE_INDEX_KEY);
 }
 
-export function importBackup(raw: string, mode: "merge" | "replace" = "merge"): ImportResult {
-  const parsed = JSON.parse(raw);
-  const incoming = Array.isArray(parsed)
-    ? parsed
-    : Array.isArray(parsed?.courses)
-    ? parsed.courses
-    : null;
-  if (!incoming) throw new Error("Backup-fil mangler 'courses'.");
+interface ParsedBackup {
+  validCourses: Course[];
+  invalidCount: number;
+  studyLog: StudyLog | null;
+}
 
-  const migrated = (incoming as Course[]).map(migrateCourse);
-  const incomingLog = (parsed?.study_log && typeof parsed.study_log === "object")
-    ? (parsed.study_log as StudyLog)
-    : null;
+function parseBackup(raw: string): ParsedBackup {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("Backup-fil er ikke gyldig JSON.");
+  }
+
+  const envelope = BackupEnvelopeSchema.safeParse(parsed);
+  if (!envelope.success) {
+    throw new Error("Backup-fil mangler 'courses'.");
+  }
+
+  const rawCourses = Array.isArray(envelope.data) ? envelope.data : envelope.data.courses;
+  const studyLogCandidate =
+    !Array.isArray(envelope.data) && envelope.data.study_log !== undefined
+      ? envelope.data.study_log
+      : undefined;
+
+  const validCourses: Course[] = [];
+  let invalidCount = 0;
+  const seenIds = new Set<string>();
+
+  for (const candidate of rawCourses) {
+    const result = CourseSchema.safeParse(candidate);
+    if (!result.success) {
+      invalidCount++;
+      continue;
+    }
+    if (seenIds.has(result.data.id)) {
+      invalidCount++;
+      continue;
+    }
+    seenIds.add(result.data.id);
+    validCourses.push(migrateCourse(result.data as Course));
+  }
+
+  let studyLog: StudyLog | null = null;
+  if (studyLogCandidate !== undefined) {
+    const logResult = StudyLogSchema.safeParse(studyLogCandidate);
+    if (logResult.success) studyLog = logResult.data;
+  }
+
+  return { validCourses, invalidCount, studyLog };
+}
+
+export function importBackup(raw: string, mode: "merge" | "replace" = "merge"): ImportResult {
+  const { validCourses, invalidCount, studyLog } = parseBackup(raw);
 
   if (mode === "replace") {
     clearAllCourses();
     const order: string[] = [];
-    for (const course of migrated) {
+    for (const course of validCourses) {
       localStorage.setItem(courseKey(course.id), JSON.stringify(course));
       order.push(course.id);
     }
     writeIndex(order);
-    if (incomingLog) setStudyLog(incomingLog);
-    return { imported: migrated.length, skipped: 0 };
+    if (studyLog) setStudyLog(studyLog);
+    return { imported: validCourses.length, skipped: 0, invalid: invalidCount };
   }
 
   const existingIds = new Set(readIndex());
   const newIds: string[] = [];
   let imported = 0;
   let skipped = 0;
-  for (const course of migrated) {
+  for (const course of validCourses) {
     if (existingIds.has(course.id)) {
       skipped++;
       continue;
@@ -194,13 +289,13 @@ export function importBackup(raw: string, mode: "merge" | "replace" = "merge"): 
     writeIndex([...newIds, ...readIndex()]);
   }
 
-  if (incomingLog) {
+  if (studyLog) {
     const merged = { ...getStudyLog() };
-    for (const [day, count] of Object.entries(incomingLog)) {
+    for (const [day, count] of Object.entries(studyLog)) {
       merged[day] = Math.max(merged[day] ?? 0, count);
     }
     setStudyLog(merged);
   }
 
-  return { imported, skipped };
+  return { imported, skipped, invalid: invalidCount };
 }

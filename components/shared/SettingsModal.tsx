@@ -72,9 +72,9 @@ export default function SettingsModal({ open, onClose }: Props) {
       setBackupMsg({
         kind: "ok",
         text:
-          result.imported === 0 && result.skipped > 0
+          result.imported === 0 && result.skipped > 0 && result.invalid === 0
             ? t.settingsNoneNew(result.skipped)
-            : t.settingsImportOk(result.imported, result.skipped),
+            : t.settingsImportOk(result.imported, result.skipped, result.invalid),
       });
       setTimeout(() => window.location.reload(), 800);
     } catch (err) {
