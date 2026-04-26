@@ -142,6 +142,9 @@ export interface Translations {
   uploadSaveError: string;
   uploadApiError: string;
 
+  // Course page
+  backHome: string;
+
   // Home page
   yourCourses: string;
   noCourses: string;
@@ -328,6 +331,7 @@ export const no: Translations = {
   uploadSaveError: "Klarte ikke å lagre kurset. Prøv igjen.",
   uploadApiError: "Noe gikk galt. Sjekk API-nøkkelen og prøv igjen.",
 
+  backHome: "← Forsiden",
   yourCourses: "Dine kurs",
   noCourses: "Ingen kurs ennå",
   courseCount: (n) => `${n} kurs lagret`,
@@ -512,6 +516,7 @@ export const en: Translations = {
   uploadSaveError: "Could not save the course. Please try again.",
   uploadApiError: "Something went wrong. Check your API key and try again.",
 
+  backHome: "← Home",
   yourCourses: "Your courses",
   noCourses: "No courses yet",
   courseCount: (n) => `${n} ${n === 1 ? "course" : "courses"} saved`,
