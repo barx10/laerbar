@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Mangler fil" }, { status: 400 });
   }
 
+  if (file.type !== "application/pdf") {
+    return NextResponse.json({ error: "Filen må være en PDF" }, { status: 415 });
+  }
+
   if (file.size > 20 * 1024 * 1024) {
     return NextResponse.json({ error: "Filen er for stor (maks 20MB)" }, { status: 400 });
   }
@@ -83,31 +87,38 @@ Ikke bruk tankestreker i noe felt. Hverken em-dash (—) eller en-dash (–). Br
 
 Svar på norsk.`;
 
-  const [conceptResult, sourceText] = await Promise.all([
-    generateObject({
-      model,
-      schema: OutputSchema,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "file",
-              data: base64,
-              mediaType: "application/pdf",
-            },
-            {
-              type: "text",
-              text: conceptPrompt,
-            },
-          ],
-        },
-      ],
-    }),
-    extractSourceText(model, base64),
-  ]);
-
-  return NextResponse.json({ ...conceptResult.object, source_text: sourceText });
+  try {
+    const [conceptResult, sourceText] = await Promise.all([
+      generateObject({
+        model,
+        schema: OutputSchema,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "file",
+                data: base64,
+                mediaType: "application/pdf",
+              },
+              {
+                type: "text",
+                text: conceptPrompt,
+              },
+            ],
+          },
+        ],
+      }),
+      extractSourceText(model, base64),
+    ]);
+    return NextResponse.json({ ...conceptResult.object, source_text: sourceText });
+  } catch (err) {
+    console.error("[/api/generate] generation failed", err);
+    return NextResponse.json(
+      { error: "Vi klarte ikke hente ut konsepter fra PDFen. Prøv en annen fil eller en annen modell." },
+      { status: 422 },
+    );
+  }
 }
 
 async function extractSourceText(
