@@ -19,11 +19,28 @@ const outfit = Outfit({
   weight: ["300", "400", "500", "600"],
 });
 
-export const metadata: Metadata = {
-  title: "Lærbar",
-  description: "Last opp fagstoff og bevis at du kan det.",
-  icons: { icon: "/favicon.jpg" },
-};
+const META = {
+  no: {
+    title: "Lærbar — bevis at du kan det",
+    description: "Last opp fagstoff og bevis at du kan det.",
+  },
+  en: {
+    title: "Lærbar — prove that you know it",
+    description: "Upload study material and prove that you know it.",
+  },
+} as const;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const lang = parseLang(cookieStore.get(LANG_COOKIE)?.value);
+  const { title, description } = META[lang];
+  return {
+    title,
+    description,
+    icons: { icon: "/favicon.jpg" },
+    openGraph: { title, description, locale: lang === "en" ? "en_US" : "nb_NO" },
+  };
+}
 
 export default async function RootLayout({
   children,
