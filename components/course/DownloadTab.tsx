@@ -9,9 +9,9 @@ interface Props {
 }
 
 export default function DownloadTab({ course }: Props) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   function download() {
-    const html = generateHtml(course);
+    const html = generateHtml(course, lang);
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
