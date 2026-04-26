@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 import { streamText } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { guardApiRequest } from "@/lib/api-guard";
+import { getRequestContext } from "@/lib/api-context";
+import { createGeminiModel, GEMINI_FAST_OPTS } from "@/lib/ai";
+import { noDashesInstruction } from "@/lib/prompts";
 
 // Skalaen må være entydig for modellen. Tidligere sendte vi bare "3/3",
 // og modellen tolket tallet som lavt på skalaen og snudde kalibreringen.
@@ -21,18 +23,15 @@ export async function POST(req: NextRequest) {
   const blocked = guardApiRequest(req);
   if (blocked) return blocked;
 
-  const apiKey = req.headers.get("X-API-Key");
-  const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
-  const lang = req.headers.get("X-Language") ?? "no";
-
-  if (!apiKey) {
+  const ctx = getRequestContext(req);
+  if (!ctx) {
     return new Response("Mangler API-nøkkel", { status: 401 });
   }
+  const { apiKey, modelId, lang } = ctx;
 
   const { concept, question, correctAnswer, userAnswer, confidence } = await req.json();
 
-  const google = createGoogleGenerativeAI({ apiKey });
-  const model = google(modelId);
+  const model = createGeminiModel(apiKey, modelId);
 
   const CONFIDENCE_LEVEL = lang === "en" ? CONFIDENCE_LEVEL_EN : CONFIDENCE_LEVEL_NO;
   const level = confidence ? CONFIDENCE_LEVEL[confidence] : null;
@@ -98,7 +97,7 @@ End with one clear closing sentence on its own line, without a bullet point:
 - "✓ You have demonstrated good understanding." if the answer substantially covers the core.
 - "↻ Try to [specific action]." if something essential is missing. Be specific about what to elaborate, not generic.
 
-DASHES that MUST NOT be used: Do not use dashes — neither em-dash (—) nor en-dash (–). Use commas, periods, colons, or parentheses instead. This applies throughout, including the closing sentence. Only regular hyphens (-) in compound words are allowed.
+${noDashesInstruction("en")} This applies throughout, including the closing sentence.
 
 Be constructive, concrete, and human. Write in English, always in second person.`
     : `Du er en erfaren faglig veileder. Du henvender deg direkte til en voksen som tilegner seg ny kunnskap, i du-form. Skriv aldri om "eleven", "studenten" eller "brukeren" i tredjeperson. Snakk alltid til personen ("du har", "svaret ditt", "du kunne utdype").
@@ -122,18 +121,14 @@ Avslutt med én tydelig avslutningssetning på egen linje, uten kulepunkt:
 - "✓ Du har vist god forståelse." hvis svaret i hovedsak dekker kjernen.
 - "↻ Prøv å [konkret hva]." hvis det mangler noe vesentlig. Vær spesifikk i det som skal utdypes, ikke generisk.
 
-STREKK OG TEGN som IKKE skal brukes i svaret: Ikke bruk tankestreker. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
+${noDashesInstruction("no")} Dette gjelder gjennomgående, også avslutningssetningen.
 
 Vær konstruktiv, konkret og menneskelig. Skriv på norsk, alltid i du-form.`;
 
   const result = streamText({
     model,
     prompt,
-    providerOptions: {
-      google: {
-        thinkingConfig: { thinkingLevel: "minimal" },
-      },
-    },
+    providerOptions: GEMINI_FAST_OPTS,
   });
 
   return result.toTextStreamResponse();

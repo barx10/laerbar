@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 import { streamText } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { guardApiRequest } from "@/lib/api-guard";
+import { getRequestContext } from "@/lib/api-context";
+import { createGeminiModel, GEMINI_FAST_OPTS } from "@/lib/ai";
+import { noDashesInstruction } from "@/lib/prompts";
 
 const SOURCE_TEXT_PROMPT_CAP = 30 * 1024;
 
@@ -9,18 +11,15 @@ export async function POST(req: NextRequest) {
   const blocked = guardApiRequest(req);
   if (blocked) return blocked;
 
-  const apiKey = req.headers.get("X-API-Key");
-  const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
-  const lang = req.headers.get("X-Language") ?? "no";
-
-  if (!apiKey) {
+  const ctx = getRequestContext(req);
+  if (!ctx) {
     return new Response("Mangler API-nøkkel", { status: 401 });
   }
+  const { apiKey, modelId, lang } = ctx;
 
   const { concept, conceptAnswer, sourceText, message, history } = await req.json();
 
-  const google = createGoogleGenerativeAI({ apiKey });
-  const model = google(modelId);
+  const model = createGeminiModel(apiKey, modelId);
 
   const trimmedSource =
     typeof sourceText === "string" && sourceText.length > 0
@@ -55,7 +54,7 @@ Important:
 - For article-specific questions: do not invent authors, years, or numbers not in the text. If the source text is truncated and the answer may be in the missing part, say so clearly.
 - Do not start responses with phrases like "Great question!", "Good thinking!" or similar praise.
 - If you are not certain about something, say so clearly. Do not guess.
-- Do not use dashes in the response — neither em-dash (—) nor en-dash (–). Use commas, periods, colons, or parentheses instead. Only regular hyphens (-) in compound words are allowed.
+- ${noDashesInstruction("en")}
 - Be concise and concrete. Write in English, always in second person.`
     : `Du er en hjelpsom AI-tutor for voksne som tilegner seg ny kunnskap. Du henvender deg direkte i du-form, aldri "eleven", "studenten" eller "brukeren" i tredjeperson.
 
@@ -71,7 +70,7 @@ Viktig:
 - For artikkel-spesifikke spørsmål: ikke finn på forfattere, årstall eller tall som ikke står i teksten. Hvis kildeteksten er avkuttet og svaret kan ligge i det som mangler, si det tydelig.
 - Ikke start svaret med fraser som "Bra spørsmål!", "Godt tenkt!" eller lignende ros.
 - Hvis du ikke vet noe sikkert, si det tydelig. Ikke gjett.
-- Ikke bruk tankestreker i svaret. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
+- ${noDashesInstruction("no")}
 - Vær kortfattet og konkret. Svar på norsk, alltid i du-form.`;
 
   const messages = [
@@ -86,11 +85,7 @@ Viktig:
     model,
     system: systemPrompt,
     messages,
-    providerOptions: {
-      google: {
-        thinkingConfig: { thinkingLevel: "minimal" },
-      },
-    },
+    providerOptions: GEMINI_FAST_OPTS,
   });
 
   return result.toTextStreamResponse();

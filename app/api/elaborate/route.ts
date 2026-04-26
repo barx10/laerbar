@@ -1,29 +1,26 @@
 import { NextRequest } from "next/server";
 import { streamText, generateText } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { guardApiRequest } from "@/lib/api-guard";
+import { getRequestContext } from "@/lib/api-context";
+import { createGeminiModel, GEMINI_FAST_OPTS } from "@/lib/ai";
+import { noDashesInstruction } from "@/lib/prompts";
 
 export async function POST(req: NextRequest) {
   const blocked = guardApiRequest(req);
   if (blocked) return blocked;
 
-  const apiKey = req.headers.get("X-API-Key");
-  const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
-  const lang = req.headers.get("X-Language") ?? "no";
-
-  if (!apiKey) {
+  const ctx = getRequestContext(req);
+  if (!ctx) {
     return new Response("Mangler API-nøkkel", { status: 401 });
   }
+  const { apiKey, modelId, lang } = ctx;
 
   const body = await req.json();
   const { concept, question, correctAnswer, userAnswer, userElaboration, elaborationQuestion } = body;
 
-  const google = createGoogleGenerativeAI({ apiKey });
-  const model = google(modelId);
+  const model = createGeminiModel(apiKey, modelId);
 
-  const NO_DASHES = lang === "en"
-    ? `DASHES that MUST NOT be used: Do not use dashes — neither em-dash (—) nor en-dash (–). Use commas, periods, colons, or parentheses instead. Only regular hyphens (-) in compound words are allowed.`
-    : `STREKK OG TEGN som IKKE skal brukes: Ikke bruk tankestreker. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.`;
+  const NO_DASHES = noDashesInstruction(lang);
 
   // Modus 1: generer ett utvidende oppfølgingsspørsmål.
   if (!userElaboration) {
@@ -68,11 +65,7 @@ Skriv på norsk.`;
     const result = await generateText({
       model,
       prompt: elaborationPrompt,
-      providerOptions: {
-        google: {
-          thinkingConfig: { thinkingLevel: "minimal" },
-        },
-      },
+      providerOptions: GEMINI_FAST_OPTS,
     });
 
     return Response.json({ question: result.text.trim() });
@@ -114,11 +107,7 @@ Skriv som naturlig prosa på norsk.`;
   const result = streamText({
     model,
     prompt: feedbackPrompt,
-    providerOptions: {
-      google: {
-        thinkingConfig: { thinkingLevel: "minimal" },
-      },
-    },
+    providerOptions: GEMINI_FAST_OPTS,
   });
 
   return result.toTextStreamResponse();

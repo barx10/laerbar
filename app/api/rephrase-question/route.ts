@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateObject } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import { guardApiRequest } from "@/lib/api-guard";
+import { getRequestContext } from "@/lib/api-context";
+import { createGeminiModel, GEMINI_FAST_OPTS } from "@/lib/ai";
+import { noDashesInstruction } from "@/lib/prompts";
 
 const OutputSchema = z.object({
   variants: z.array(z.string()).length(3),
@@ -12,13 +14,11 @@ export async function POST(req: NextRequest) {
   const blocked = guardApiRequest(req);
   if (blocked) return blocked;
 
-  const apiKey = req.headers.get("X-API-Key");
-  const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
-  const lang = req.headers.get("X-Language") ?? "no";
-
-  if (!apiKey) {
+  const ctx = getRequestContext(req);
+  if (!ctx) {
     return NextResponse.json({ error: "Mangler API-nøkkel" }, { status: 401 });
   }
+  const { apiKey, modelId, lang } = ctx;
 
   const { concept, question, answer } = await req.json();
 
@@ -26,8 +26,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Mangler felter" }, { status: 400 });
   }
 
-  const google = createGoogleGenerativeAI({ apiKey });
-  const model = google(modelId);
+  const model = createGeminiModel(apiKey, modelId);
 
   const rephrasePrompt = lang === "en"
     ? `Create three alternative phrasings of the same flashcard question. The purpose is for the learner to encounter the same concept with different wording each time, so that learning becomes deep understanding rather than memorising a specific sentence.
@@ -52,7 +51,7 @@ Requirements:
 - Write in English.
 - Do not include the answer in the question.
 - Do not number the variants. Return them as plain text.
-- Do not use dashes (em-dash — or en-dash –) in any variant. Use commas, periods, colons, or parentheses.`
+- ${noDashesInstruction("en")}`
     : `Du skal lage tre alternative formuleringer av samme flashcard-spørsmål. Formålet er at den som lærer møter samme konsept med ulik ordlyd hver gang, så læringen blir dyp forståelse i stedet for å huske en bestemt setning.
 
 Konsept: ${concept}
@@ -75,18 +74,14 @@ Krav:
 - Skriv på norsk.
 - Ikke inkluder svaret i spørsmålet.
 - Ikke nummerer variantene. Returner dem som ren tekst.
-- Ikke bruk tankestreker (em-dash — eller en-dash –) i noen variant. Bruk komma, punktum, kolon eller parenteser.`;
+- ${noDashesInstruction("no")}`;
 
   try {
     const result = await generateObject({
       model,
       schema: OutputSchema,
       prompt: rephrasePrompt,
-      providerOptions: {
-        google: {
-          thinkingConfig: { thinkingLevel: "minimal" },
-        },
-      },
+      providerOptions: GEMINI_FAST_OPTS,
     });
 
     return NextResponse.json({ variants: result.object.variants });

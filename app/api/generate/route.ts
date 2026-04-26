@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateObject, generateText } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import { guardApiRequest } from "@/lib/api-guard";
+import { getRequestContext } from "@/lib/api-context";
+import { createGeminiModel } from "@/lib/ai";
+import { noDashesInstruction } from "@/lib/prompts";
+import type { LanguageModel } from "ai";
 
 const SOURCE_TEXT_CAP = 80 * 1024; // bytes of raw text we keep per kurs
 
@@ -24,13 +27,11 @@ export async function POST(req: NextRequest) {
   const blocked = guardApiRequest(req);
   if (blocked) return blocked;
 
-  const apiKey = req.headers.get("X-API-Key");
-  const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
-  const lang = req.headers.get("X-Language") ?? "no";
-
-  if (!apiKey) {
+  const ctx = getRequestContext(req);
+  if (!ctx) {
     return NextResponse.json({ error: "Mangler API-nøkkel" }, { status: 401 });
   }
+  const { apiKey, modelId, lang } = ctx;
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
@@ -50,8 +51,7 @@ export async function POST(req: NextRequest) {
   const bytes = await file.arrayBuffer();
   const base64 = Buffer.from(bytes).toString("base64");
 
-  const google = createGoogleGenerativeAI({ apiKey });
-  const model = google(modelId);
+  const model = createGeminiModel(apiKey, modelId);
 
   const conceptPrompt = lang === "en"
     ? `You are a pedagogical expert. Analyse this study material and extract the 5 to 10 most important core concepts.
@@ -67,7 +67,7 @@ For each concept create:
 Create a fitting title for the document (title).
 Questions should challenge reflection, not just "what is X?" but "why / how / in what context?"
 
-Do not use dashes in any field — neither em-dash (—) nor en-dash (–). Use commas, periods, colons, or parentheses instead. Only regular hyphens (-) in compound words are allowed.
+${noDashesInstruction("en")} Applies to every field.
 
 Answer in English.`
     : `Du er en pedagogisk ekspert. Analyser dette fagstoffet og trekk ut de 5 til 10 viktigste kjernekonseptene.
@@ -83,7 +83,7 @@ For hvert konsept skal du lage:
 Lag et passe tittel for dokumentet (title).
 Spørsmålene skal utfordre til refleksjon, ikke bare "hva er X?" men "hvorfor/hvordan/hvilken sammenheng?"
 
-Ikke bruk tankestreker i noe felt. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
+${noDashesInstruction("no")} Gjelder alle felter.
 
 Svar på norsk.`;
 
@@ -122,7 +122,7 @@ Svar på norsk.`;
 }
 
 async function extractSourceText(
-  model: ReturnType<ReturnType<typeof createGoogleGenerativeAI>>,
+  model: LanguageModel,
   base64: string,
 ): Promise<string> {
   try {
