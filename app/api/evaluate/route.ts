@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { streamText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { guardApiRequest } from "@/lib/api-guard";
 
 // Skalaen må være entydig for modellen. Tidligere sendte vi bare "3/3",
 // og modellen tolket tallet som lavt på skalaen og snudde kalibreringen.
@@ -17,6 +18,9 @@ const CONFIDENCE_LEVEL_EN: Record<number, { label: string; tier: "low" | "medium
 };
 
 export async function POST(req: NextRequest) {
+  const blocked = guardApiRequest(req);
+  if (blocked) return blocked;
+
   const apiKey = req.headers.get("X-API-Key");
   const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
   const lang = req.headers.get("X-Language") ?? "no";

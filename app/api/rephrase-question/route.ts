@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
+import { guardApiRequest } from "@/lib/api-guard";
 
 const OutputSchema = z.object({
   variants: z.array(z.string()).length(3),
 });
 
 export async function POST(req: NextRequest) {
+  const blocked = guardApiRequest(req);
+  if (blocked) return blocked;
+
   const apiKey = req.headers.get("X-API-Key");
   const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
   const lang = req.headers.get("X-Language") ?? "no";

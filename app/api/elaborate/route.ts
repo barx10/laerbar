@@ -1,8 +1,12 @@
 import { NextRequest } from "next/server";
 import { streamText, generateText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { guardApiRequest } from "@/lib/api-guard";
 
 export async function POST(req: NextRequest) {
+  const blocked = guardApiRequest(req);
+  if (blocked) return blocked;
+
   const apiKey = req.headers.get("X-API-Key");
   const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
   const lang = req.headers.get("X-Language") ?? "no";
