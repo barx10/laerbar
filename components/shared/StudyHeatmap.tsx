@@ -1,7 +1,7 @@
 "use client";
 
-import { addDays, getStreak, StudyLog } from "@/lib/study-log";
-import { today } from "@/lib/srs";
+import { getStreak, StudyLog } from "@/lib/study-log";
+import { addDays, today } from "@/lib/srs";
 import { useLanguage } from "@/lib/language-context";
 
 interface Props {

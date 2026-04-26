@@ -1,6 +1,5 @@
 import { Concept, Course } from "./types";
-import { isMastered, today } from "./srs";
-import { addDays } from "./study-log";
+import { addDays, isMastered, today } from "./srs";
 
 /**
  * Returnerer datoen (ISO YYYY-MM-DD) konseptet passerte mestringsterskelen,

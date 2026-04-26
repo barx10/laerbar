@@ -34,9 +34,9 @@ export function today(): string {
   return toLocalIso(new Date());
 }
 
-export function addDays(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + Math.round(days));
+export function addDays(iso: string, delta: number): string {
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate() + Math.round(delta));
   return toLocalIso(d);
 }
 
@@ -115,7 +115,7 @@ export function applyGrade(concept: Concept, grade: Grade): Concept {
     mastery_confirmations: newConfirmations,
     mastered: newConfirmations >= MASTERY_THRESHOLD,
     srs: {
-      next_review: addDays(newInterval),
+      next_review: addDays(today(), newInterval),
       interval: newInterval,
       lapses: newLapses,
       ease_factor: newEf,
