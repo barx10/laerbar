@@ -36,7 +36,7 @@ export interface Translations {
   settingsImportBackup: string;
   settingsBackupOk: (n: number) => string;
   settingsNoneNew: (n: number) => string;
-  settingsImportOk: (imp: number, skip: number) => string;
+  settingsImportOk: (imp: number, skip: number, invalid: number) => string;
   settingsBackupError: string;
   settingsImportError: string;
 
@@ -225,8 +225,12 @@ export const no: Translations = {
   settingsImportBackup: "↑ Importer backup",
   settingsBackupOk: (n) => `${n} kurs lastet ned.`,
   settingsNoneNew: (n) => `Ingen nye kurs (${n} fantes allerede).`,
-  settingsImportOk: (imp, skip) =>
-    `Importerte ${imp} kurs. Hoppet over ${skip} duplikater.`,
+  settingsImportOk: (imp, skip, invalid) => {
+    const parts = [`Importerte ${imp} ${imp === 1 ? "kurs" : "kurs"}`];
+    if (skip > 0) parts.push(`hoppet over ${skip} ${skip === 1 ? "duplikat" : "duplikater"}`);
+    if (invalid > 0) parts.push(`${invalid} ${invalid === 1 ? "ugyldig oppføring" : "ugyldige oppføringer"} hoppet over`);
+    return parts.join(", ") + ".";
+  },
   settingsBackupError: "Kunne ikke lage backup.",
   settingsImportError: "Ugyldig backup-fil.",
 
@@ -409,8 +413,12 @@ export const en: Translations = {
   settingsImportBackup: "↑ Import backup",
   settingsBackupOk: (n) => `${n} ${n === 1 ? "course" : "courses"} downloaded.`,
   settingsNoneNew: (n) => `No new courses (${n} already existed).`,
-  settingsImportOk: (imp, skip) =>
-    `Imported ${imp} ${imp === 1 ? "course" : "courses"}. Skipped ${skip} ${skip === 1 ? "duplicate" : "duplicates"}.`,
+  settingsImportOk: (imp, skip, invalid) => {
+    const parts = [`Imported ${imp} ${imp === 1 ? "course" : "courses"}`];
+    if (skip > 0) parts.push(`skipped ${skip} ${skip === 1 ? "duplicate" : "duplicates"}`);
+    if (invalid > 0) parts.push(`${invalid} invalid ${invalid === 1 ? "entry" : "entries"} skipped`);
+    return parts.join(", ") + ".";
+  },
   settingsBackupError: "Could not create backup.",
   settingsImportError: "Invalid backup file.",
 
