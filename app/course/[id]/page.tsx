@@ -7,10 +7,12 @@ import CourseTabs from "@/components/course/CourseTabs";
 import { getCourse, saveCourse } from "@/lib/storage";
 import { isInReview, isMastered } from "@/lib/srs";
 import { Course } from "@/lib/types";
+import { useLanguage } from "@/lib/language-context";
 
 export default function CoursePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { lang, t } = useLanguage();
   const [course, setCourse] = useState<Course | null>(null);
 
   useEffect(() => {
@@ -39,12 +41,12 @@ export default function CoursePage() {
           onClick={() => router.push("/")}
           className="text-xs text-muted-foreground hover:text-dg transition-colors mb-3"
         >
-          ← Forsiden
+          {t.backHome}
         </button>
         <h1 className="font-heading text-2xl text-dg">{course.title}</h1>
         <p className="text-xs text-muted-foreground mt-1 mb-0">
-          {new Date(course.created_at).toLocaleDateString("nb-NO")} · {mastered}/{course.concepts.length} mestret
-          {inReview > 0 ? ` · ${inReview} under repetisjon` : ""}
+          {new Date(course.created_at).toLocaleDateString(lang === "en" ? "en-GB" : "nb-NO")} · {t.masteredLabel(mastered, course.concepts.length)}
+          {inReview > 0 ? t.underReviewShort(inReview) : ""}
         </p>
       </div>
       <CourseTabs course={course} onUpdate={handleUpdate} />

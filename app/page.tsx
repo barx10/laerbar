@@ -6,6 +6,7 @@ import Navbar from "@/components/shared/Navbar";
 import StudyHeatmap from "@/components/shared/StudyHeatmap";
 import LearningCurve from "@/components/shared/LearningCurve";
 import { getCourses, deleteCourse } from "@/lib/storage";
+import { useLanguage } from "@/lib/language-context";
 import {
   dueCountAcrossCourses,
   daysUntilNextAcrossCourses,
@@ -16,6 +17,7 @@ import { getStudyLog, StudyLog } from "@/lib/study-log";
 import { Course } from "@/lib/types";
 
 export default function Home() {
+  const { lang, t } = useLanguage();
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [studyLog, setStudyLog] = useState<StudyLog>({});
@@ -52,9 +54,9 @@ export default function Home() {
 
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h2 className="font-heading text-2xl text-dg mb-1">Dine kurs</h2>
+            <h2 className="font-heading text-2xl text-dg mb-1">{t.yourCourses}</h2>
             <p className="text-sm text-muted-foreground">
-              {courses.length === 0 ? "Ingen kurs ennå" : `${courses.length} kurs lagret`}
+              {courses.length === 0 ? t.noCourses : t.courseCount(courses.length)}
             </p>
           </div>
           {courses.length > 0 && (
@@ -62,7 +64,7 @@ export default function Home() {
               onClick={() => router.push("/upload")}
               className="bg-dg text-cream px-6 py-2.5 rounded text-sm font-semibold hover:bg-mg transition-colors"
             >
-              + Nytt kurs
+              {t.newCourse}
             </button>
           )}
         </div>
@@ -70,15 +72,15 @@ export default function Home() {
         {courses.length === 0 ? (
           <div className="bg-white border border-black/8 rounded-lg p-12 text-center">
             <div className="text-4xl mb-4 opacity-40">📚</div>
-            <h3 className="font-heading text-lg text-dg mb-2">Last opp ditt første fagstoff</h3>
+            <h3 className="font-heading text-lg text-dg mb-2">{t.uploadFirst}</h3>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              Last opp en PDF, og AI trekker ut kjernekonseptene du må bevise at du kan.
+              {t.uploadFirstDesc}
             </p>
             <button
               onClick={() => router.push("/upload")}
               className="bg-dg text-cream px-7 py-3 rounded text-sm font-semibold hover:bg-mg transition-colors"
             >
-              Start læringsløp
+              {t.startLearning}
             </button>
           </div>
         ) : (
@@ -102,9 +104,9 @@ export default function Home() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-heading text-base text-dg mb-1 truncate">{course.title}</h3>
                       <p className="text-xs text-muted-foreground mb-3">
-                        {new Date(course.created_at).toLocaleDateString("nb-NO")} ·{" "}
-                        {mastered}/{total} mestret
-                        {review > 0 ? ` · ${review} under repetisjon` : ""}
+                        {new Date(course.created_at).toLocaleDateString(lang === "en" ? "en-GB" : "nb-NO")} ·{" "}
+                        {t.masteredLabel(mastered, total)}
+                        {review > 0 ? t.underReviewShort(review) : ""}
                       </p>
                       <div className="relative w-full bg-black/8 rounded-full h-1 overflow-hidden">
                         <div
@@ -120,7 +122,7 @@ export default function Home() {
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(course.id); }}
                       className="text-muted-foreground hover:text-red-500 transition-colors text-lg leading-none opacity-0 group-hover:opacity-100 flex-shrink-0"
-                      title="Slett kurs"
+                      title={t.deleteCourse}
                     >
                       &times;
                     </button>
@@ -144,23 +146,24 @@ function DailyQueue({
   nextDays: number | null;
   onStart: () => void;
 }) {
+  const { t } = useLanguage();
   if (dueToday > 0) {
     return (
       <div className="bg-dg text-cream rounded-lg p-6 mb-6 flex items-center justify-between gap-4">
         <div>
-          <div className="text-xs uppercase tracking-wider text-gl opacity-80 mb-1">Dagens økt</div>
+          <div className="text-xs uppercase tracking-wider text-gl opacity-80 mb-1">{t.dailySession}</div>
           <div className="font-heading text-xl mb-1">
-            {dueToday} {dueToday === 1 ? "kort" : "kort"} klar{dueToday === 1 ? "t" : "e"} i dag
+            {t.dueCount(dueToday)}
           </div>
           <p className="text-xs text-gl opacity-80 leading-relaxed">
-            Blandet økt på tvers av alle kursene dine.
+            {t.mixedSession}
           </p>
         </div>
         <button
           onClick={onStart}
           className="bg-gold text-dg px-6 py-3 rounded font-semibold text-sm hover:brightness-95 transition-all whitespace-nowrap"
         >
-          Start økt →
+          {t.startSession}
         </button>
       </div>
     );
@@ -169,15 +172,15 @@ function DailyQueue({
   return (
     <div className="bg-cream border border-black/8 rounded-lg p-5 mb-6 flex items-center justify-between gap-4">
       <div>
-        <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Dagens økt</div>
+        <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t.dailySession}</div>
         <div className="text-sm text-dg">
           {nextDays === 0
-            ? "Nye kort forfaller senere i dag."
+            ? t.newCardsDueLater
             : nextDays === 1
-            ? "Neste kort er klart i morgen."
+            ? t.nextTomorrow
             : nextDays
-            ? `Neste kort er klart om ${nextDays} dager.`
-            : "Ingen kort til repetisjon ennå."}
+            ? t.nextInDays(nextDays)
+            : t.allReviewed}
         </div>
       </div>
     </div>

@@ -16,8 +16,10 @@ import {
 } from "@/lib/srs";
 import { logStudyToday } from "@/lib/study-log";
 import { Course } from "@/lib/types";
+import { useLanguage } from "@/lib/language-context";
 
 export default function TodayPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [courses, setCourses] = useState<Course[] | null>(null);
   const [queue, setQueue] = useState<DueItem[]>([]);
@@ -91,11 +93,11 @@ export default function TodayPage() {
           onClick={() => router.push("/")}
           className="text-xs text-muted-foreground hover:text-dg transition-colors mb-3"
         >
-          ← Tilbake til oversikt
+          {t.backToOverview}
         </button>
-        <h1 className="font-heading text-2xl text-dg">Dagens økt</h1>
+        <h1 className="font-heading text-2xl text-dg">{t.todayTitle}</h1>
         <p className="text-xs text-muted-foreground mt-1">
-          Blandet repetisjon på tvers av alle kursene dine
+          {t.todaySubtitle}
         </p>
       </div>
 
@@ -125,24 +127,25 @@ export default function TodayPage() {
 }
 
 function EmptyState({ nextDays, onBack }: { nextDays: number | null; onBack: () => void }) {
+  const { t } = useLanguage();
   return (
     <div className="text-center py-12">
       <div className="text-3xl mb-4 opacity-40">🌱</div>
-      <h2 className="font-heading text-lg text-dg mb-2">Ingen kort klare i dag</h2>
+      <h2 className="font-heading text-lg text-dg mb-2">{t.noCardsToday}</h2>
       <p className="text-sm text-muted-foreground leading-relaxed mb-6">
         {nextDays === 0
-          ? "Nye kort forfaller senere i dag."
+          ? t.newCardsDueLater
           : nextDays === 1
-          ? "Neste kort er klart i morgen."
+          ? t.nextTomorrow
           : nextDays
-          ? `Neste kort er klart om ${nextDays} dager.`
-          : "Mester først noen konsepter i Lær-fanen, så dukker de opp her."}
+          ? t.nextInDays(nextDays)
+          : t.noCardsMasterFirst}
       </p>
       <button
         onClick={onBack}
         className="border border-black/15 px-5 py-2 rounded text-sm text-dg hover:border-gold transition-all"
       >
-        Til oversikten
+        {t.backBtn}
       </button>
     </div>
   );
@@ -157,25 +160,26 @@ function DoneState({
   nextDays: number | null;
   onBack: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <div className="text-center py-12">
       <div className="text-3xl mb-4">✓</div>
-      <h2 className="font-heading text-lg text-dg mb-2">Dagens økt fullført</h2>
+      <h2 className="font-heading text-lg text-dg mb-2">{t.todayComplete}</h2>
       <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-        Du gikk gjennom {total} {total === 1 ? "kort" : "kort"}.{" "}
+        {t.reviewedCards(total)}{" "}
         {nextDays === 0
-          ? "Flere kort forfaller senere i dag."
+          ? t.newCardsDueLater
           : nextDays === 1
-          ? "Neste kort er klart i morgen."
+          ? t.nextTomorrow
           : nextDays
-          ? `Neste kort er klart om ${nextDays} dager.`
+          ? t.nextInDays(nextDays)
           : ""}
       </p>
       <button
         onClick={onBack}
         className="bg-dg text-cream px-5 py-2 rounded text-sm font-semibold hover:bg-mg transition-colors"
       >
-        Ferdig
+        {t.doneBtn}
       </button>
     </div>
   );
@@ -198,6 +202,7 @@ function ReviewCard({
   onRate: (grade: Grade) => void;
   justMastered: string | null;
 }) {
+  const { t } = useLanguage();
   const { concept, course } = item;
   const lapses = concept.srs?.lapses ?? 0;
   const confirmations = concept.mastery_confirmations ?? 0;
@@ -207,26 +212,26 @@ function ReviewCard({
       <div className="flex justify-between items-center mb-3">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Fra kurs
+            {t.fromCourse}
           </div>
           <div className="text-sm text-dg font-medium">{course.title}</div>
         </div>
         <div className="flex gap-2 items-center">
           {lapses > 0 && (
             <div className="text-xs text-red-700 border border-red-200 bg-red-50 rounded px-3 py-1.5">
-              {lapses} {lapses === 1 ? "bom" : "bommer"}
+              {t.lapse(lapses)}
             </div>
           )}
           <div className="text-xs text-muted-foreground border border-black/10 rounded px-3 py-1.5">
             {confirmations < MASTERY_THRESHOLD
-              ? `${confirmations}/${MASTERY_THRESHOLD} bekreftet`
-              : "Mestret"}
+              ? t.confirmedOf(confirmations, MASTERY_THRESHOLD)
+              : t.mastered}
           </div>
         </div>
       </div>
 
       <div className="text-xs text-muted-foreground mb-4">
-        {index + 1} av {total} klar i dag
+        {t.repetitionOf(index + 1, total)}
       </div>
 
       <div style={{ perspective: "1200px" }} className="mb-6">
@@ -245,7 +250,7 @@ function ReviewCard({
             style={{ backfaceVisibility: "hidden" }}
           >
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-5">
-              Spørsmål · klikk for å snu
+              {t.cardQuestion}
             </p>
             <p className="font-heading text-lg text-dg text-center leading-relaxed">
               {pickQuestionVariant(concept)}
@@ -256,7 +261,7 @@ function ReviewCard({
             style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           >
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-5">
-              Svar · klikk for å snu
+              {t.cardAnswer}
             </p>
             <p className="font-heading text-lg text-dg text-center leading-relaxed">
               {concept.flashcard_back}
@@ -271,37 +276,37 @@ function ReviewCard({
             onClick={() => onRate("igjen")}
             className="flex-1 border border-red-200 bg-red-50 text-red-700 py-2.5 rounded text-sm font-medium hover:bg-red-100 transition-colors"
           >
-            Husket ikke
+            {t.forgot}
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {previewInterval("igjen", concept)} dag
+              {t.inDays(previewInterval("igjen", concept))}
             </span>
           </button>
           <button
             onClick={() => onRate("usikkert")}
             className="flex-1 border border-gold/40 bg-gold/8 text-dg py-2.5 rounded text-sm font-medium hover:bg-gold/15 transition-colors"
           >
-            Usikkert
+            {t.uncertain}
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {previewInterval("usikkert", concept)} dager
+              {t.inDays(previewInterval("usikkert", concept))}
             </span>
           </button>
           <button
             onClick={() => onRate("kunne")}
             className="flex-1 border border-lg/30 bg-green-50 text-lg py-2.5 rounded text-sm font-medium hover:bg-green-100 transition-colors"
           >
-            Kunne det
+            {t.remembered}
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {previewInterval("kunne", concept)} dager
+              {t.inDays(previewInterval("kunne", concept))}
             </span>
           </button>
         </div>
       ) : (
-        <p className="text-center text-xs text-muted-foreground">Snu kortet for å vurdere</p>
+        <p className="text-center text-xs text-muted-foreground">{t.flipToGrade}</p>
       )}
 
       {justMastered && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-lg text-cream px-5 py-3 rounded-lg shadow-lg text-sm font-semibold">
-          ✓ «{justMastered}» er nå mestret
+          {t.justMastered(justMastered)}
         </div>
       )}
     </>

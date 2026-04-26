@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Outfit } from "next/font/google";
 import Footer from "@/components/shared/Footer";
+import { LanguageProvider } from "@/lib/language-context";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -30,8 +31,10 @@ export default function RootLayout({
   return (
     <html lang="no" className={`${playfair.variable} ${outfit.variable}`}>
       <body className="antialiased min-h-screen flex flex-col">
-        <div className="flex-1">{children}</div>
-        <Footer />
+        <LanguageProvider>
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );

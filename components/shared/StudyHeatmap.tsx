@@ -2,6 +2,7 @@
 
 import { addDays, getStreak, StudyLog } from "@/lib/study-log";
 import { today } from "@/lib/srs";
+import { useLanguage } from "@/lib/language-context";
 
 interface Props {
   log: StudyLog;
@@ -10,8 +11,6 @@ interface Props {
 
 const CELL_PX = 12;
 const GAP_PX = 3;
-
-const WEEKDAY_LABELS = ["M", "T", "O", "T", "F", "L", "S"];
 
 function intensityClass(count: number): string {
   if (count === 0) return "bg-black/8";
@@ -27,6 +26,7 @@ function isoWeekdayIndex(iso: string): number {
 }
 
 export default function StudyHeatmap({ log, weeks = 26 }: Props) {
+  const { t } = useLanguage();
   const todayStr = today();
   const streak = getStreak(todayStr);
   const totalDays = weeks * 7;
@@ -50,30 +50,29 @@ export default function StudyHeatmap({ log, weeks = 26 }: Props) {
     <div className="bg-white border border-black/8 rounded-md p-5 mb-6">
       <div className="flex items-baseline justify-between mb-3 gap-4">
         <div>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Studieaktivitet</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-0.5">{t.studyActivityLabel}</div>
           {streak > 0 ? (
             <div className="text-sm text-dg">
-              <span className="font-heading text-lg">🔥 {streak}</span>{" "}
-              <span className="text-muted-foreground">
-                {streak === 1 ? "dag på rad" : "dager på rad"}
-                {!studiedToday && " (studér i dag for å holde den)"}
-              </span>
+              <span className="font-heading text-lg">🔥 {t.streakDays(streak)}</span>
+              {!studiedToday && (
+                <span className="text-muted-foreground text-xs">{t.streakKeepGoing}</span>
+              )}
             </div>
           ) : (
             <div className="text-sm text-muted-foreground">
-              Ingen aktiv streak. Svar på ett kort for å starte.
+              {t.noStreak}
             </div>
           )}
         </div>
         <div className="text-[10px] text-muted-foreground hidden sm:block">
-          Siste {weeks} uker
+          {t.lastWeeks(weeks)}
         </div>
       </div>
 
       <div className="overflow-x-auto -mx-1 px-1">
         <div className="flex gap-1.5 min-w-min">
           <div className="flex flex-col" style={{ gap: GAP_PX }}>
-            {WEEKDAY_LABELS.map((d, i) => (
+            {t.weekdayLabels.map((d, i) => (
               <div
                 key={i}
                 className="text-[9px] text-muted-foreground text-right w-3"
@@ -97,7 +96,7 @@ export default function StudyHeatmap({ log, weeks = 26 }: Props) {
                 key={i}
                 className={`rounded-sm ${cell.future ? "bg-transparent" : intensityClass(cell.count)}`}
                 style={{ width: CELL_PX, height: CELL_PX }}
-                title={cell.future ? "" : `${cell.date}: ${cell.count} ${cell.count === 1 ? "registrering" : "registreringer"}`}
+                title={cell.future ? "" : `${cell.date}: ${t.heatmapRegistrations(cell.count)}`}
               />
             ))}
           </div>

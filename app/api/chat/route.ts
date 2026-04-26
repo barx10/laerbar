@@ -1,12 +1,17 @@
 import { NextRequest } from "next/server";
 import { streamText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { guardApiRequest } from "@/lib/api-guard";
 
 const SOURCE_TEXT_PROMPT_CAP = 30 * 1024;
 
 export async function POST(req: NextRequest) {
+  const blocked = guardApiRequest(req);
+  if (blocked) return blocked;
+
   const apiKey = req.headers.get("X-API-Key");
   const modelId = req.headers.get("X-Model") ?? "gemini-3.1-flash-lite-preview";
+  const lang = req.headers.get("X-Language") ?? "no";
 
   if (!apiKey) {
     return new Response("Mangler API-nøkkel", { status: 401 });
@@ -21,25 +26,38 @@ export async function POST(req: NextRequest) {
     typeof sourceText === "string" && sourceText.length > 0
       ? sourceText.length > SOURCE_TEXT_PROMPT_CAP
         ? sourceText.slice(0, SOURCE_TEXT_PROMPT_CAP) +
-          "\n\n[... teksten er avkuttet her, resten er ikke tilgjengelig ...]"
+          (lang === "en"
+            ? "\n\n[... text truncated here, the rest is not available ...]"
+            : "\n\n[... teksten er avkuttet her, resten er ikke tilgjengelig ...]")
         : sourceText
       : "";
 
   const sourceBlock = trimmedSource
-    ? `\n\nKildetekst (ekstrahert fra det opplastede dokumentet. Bruk dette som primærkilde for artikkel-spesifikke spørsmål som forfatter, årstall, antall studier, sitater, tall og definisjoner brukt i teksten):\n"""\n${trimmedSource}\n"""`
-    : `\n\nMerk: Selve kildedokumentet er ikke tilgjengelig i denne samtalen, bare konseptet og fasiten. Hvis du blir spurt om detaljer som krever teksten (f.eks. eksakte tall, forfatter, antall studier som ble sitert), si tydelig at du ikke har tilgang til dokumentet.`;
+    ? lang === "en"
+      ? `\n\nSource text (extracted from the uploaded document. Use this as the primary source for article-specific questions about author, year, numbers, quotes, and definitions used in the text):\n"""\n${trimmedSource}\n"""`
+      : `\n\nKildetekst (ekstrahert fra det opplastede dokumentet. Bruk dette som primærkilde for artikkel-spesifikke spørsmål som forfatter, årstall, antall studier, sitater, tall og definisjoner brukt i teksten):\n"""\n${trimmedSource}\n"""`
+    : lang === "en"
+      ? `\n\nNote: The source document is not available in this conversation, only the concept and answer key. If asked about details that require the text (e.g. exact numbers, author, number of studies cited), state clearly that you do not have access to the document.`
+      : `\n\nMerk: Selve kildedokumentet er ikke tilgjengelig i denne samtalen, bare konseptet og fasiten. Hvis du blir spurt om detaljer som krever teksten (f.eks. eksakte tall, forfatter, antall studier som ble sitert), si tydelig at du ikke har tilgang til dokumentet.`;
 
-  const messages = [
-    ...(history ?? []).map((h: { role: string; text: string }) => ({
-      role: h.role === "user" ? "user" as const : "assistant" as const,
-      content: h.text,
-    })),
-    { role: "user" as const, content: message },
-  ];
+  const systemPrompt = lang === "en"
+    ? `You are a helpful AI tutor for adults acquiring new knowledge. Address the person directly in second person, never as "the student", "the user", or "the learner" in the third person.
 
-  const result = streamText({
-    model,
-    system: `Du er en hjelpsom AI-tutor for voksne som tilegner seg ny kunnskap. Du henvender deg direkte i du-form, aldri "eleven", "studenten" eller "brukeren" i tredjeperson.
+The person is learning about the concept "${concept}".
+The answer key for this concept is (for your use, do not quote in full): ${conceptAnswer}${sourceBlock}
+
+The message may be a question, a thought, a partial understanding, or just a comment.
+
+Important:
+- If the question is a factual question (e.g. "who wrote", "how long", "what is", "when", "who") or a meta-question about the text/article: answer directly and concisely. Use the source text above as the primary source for article-specific details.
+- If the person is in the middle of trying to explain or understand the concept itself, and asks for a hint or guidance: do not give away the answer. Guide, ask a counter-question, give a hint that takes them one step further.
+- Do not ask counter-questions just to be Socratic. Only when the person is genuinely working toward understanding the concept and needs a nudge.
+- For article-specific questions: do not invent authors, years, or numbers not in the text. If the source text is truncated and the answer may be in the missing part, say so clearly.
+- Do not start responses with phrases like "Great question!", "Good thinking!" or similar praise.
+- If you are not certain about something, say so clearly. Do not guess.
+- Do not use dashes in the response — neither em-dash (—) nor en-dash (–). Use commas, periods, colons, or parentheses instead. Only regular hyphens (-) in compound words are allowed.
+- Be concise and concrete. Write in English, always in second person.`
+    : `Du er en hjelpsom AI-tutor for voksne som tilegner seg ny kunnskap. Du henvender deg direkte i du-form, aldri "eleven", "studenten" eller "brukeren" i tredjeperson.
 
 Personen du snakker med holder på å lære om konseptet "${concept}".
 Fasiten for dette konseptet er (til din bruk, ikke siteres direkte i sin helhet): ${conceptAnswer}${sourceBlock}
@@ -54,7 +72,19 @@ Viktig:
 - Ikke start svaret med fraser som "Bra spørsmål!", "Godt tenkt!" eller lignende ros.
 - Hvis du ikke vet noe sikkert, si det tydelig. Ikke gjett.
 - Ikke bruk tankestreker i svaret. Hverken em-dash (—) eller en-dash (–). Bruk komma, punktum, kolon eller parenteser i stedet. Kun vanlig bindestrek (-) i sammensatte ord er tillatt.
-- Vær kortfattet og konkret. Svar på norsk, alltid i du-form.`,
+- Vær kortfattet og konkret. Svar på norsk, alltid i du-form.`;
+
+  const messages = [
+    ...(history ?? []).map((h: { role: string; text: string }) => ({
+      role: h.role === "user" ? "user" as const : "assistant" as const,
+      content: h.text,
+    })),
+    { role: "user" as const, content: message },
+  ];
+
+  const result = streamText({
+    model,
+    system: systemPrompt,
     messages,
     providerOptions: {
       google: {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Attempt, Concept } from "@/lib/types";
+import { useLanguage } from "@/lib/language-context";
 import { applyFirstPass, isUnseen, today } from "@/lib/srs";
 import { logStudyToday } from "@/lib/study-log";
 import Markdown from "@/components/shared/Markdown";
@@ -14,12 +15,6 @@ interface Props {
 
 type Confidence = 1 | 2 | 3;
 
-const CONFIDENCE_OPTIONS: { value: Confidence; label: string; hint: string }[] = [
-  { value: 1, label: "Usikker", hint: "Gjetter mer enn jeg kan" },
-  { value: 2, label: "Delvis", hint: "Kan noe, er litt usikker" },
-  { value: 3, label: "Trygg", hint: "Kan dette godt" },
-];
-
 function logAttempt(concept: Concept, confidence: Confidence, correct: boolean): Concept {
   const attempt: Attempt = { date: today(), confidence, correct };
   return { ...concept, attempts: [...(concept.attempts ?? []), attempt] };
@@ -28,6 +23,7 @@ function logAttempt(concept: Concept, confidence: Confidence, correct: boolean):
 async function generateVariants(
   concept: Concept,
   onConceptUpdate: (c: Concept) => void,
+  lang: string,
 ): Promise<void> {
   if ((concept.question_variants?.length ?? 0) > 0) return;
   try {
@@ -40,6 +36,7 @@ async function generateVariants(
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
         "X-Model": model,
+        "X-Language": lang,
       },
       body: JSON.stringify({
         concept: concept.title,
@@ -58,6 +55,7 @@ async function generateVariants(
 }
 
 export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Props) {
+  const { lang, t } = useLanguage();
   const [answer, setAnswer] = useState("");
   const [confidence, setConfidence] = useState<Confidence | null>(null);
   const [evaluation, setEvaluation] = useState<string | null>(null);
@@ -118,6 +116,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
         "X-Model": model,
+        "X-Language": lang,
       },
       body: JSON.stringify({
         concept: current.title,
@@ -150,7 +149,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     const withFirstPass = applyFirstPass(withAttempt);
     onConceptUpdate(withFirstPass);
     logStudyToday();
-    void generateVariants(withFirstPass, onConceptUpdate);
+    void generateVariants(withFirstPass, onConceptUpdate, lang);
 
     const newSessionProven = [...sessionProven, current];
     setSessionProven(newSessionProven);
@@ -192,6 +191,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
           "X-Model": model,
+          "X-Language": lang,
         },
         body: JSON.stringify({
           concept: current.title,
@@ -223,6 +223,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
         "X-Model": model,
+        "X-Language": lang,
       },
       body: JSON.stringify({
         concept: current.title,
@@ -266,6 +267,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
         "X-Model": model,
+        "X-Language": lang,
       },
       body: JSON.stringify({
         concept: current.title,
@@ -315,10 +317,8 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     return (
       <div className="text-center py-12">
         <div className="text-4xl mb-4">🎉</div>
-        <h2 className="font-heading text-xl text-dg mb-2">Alle konsepter er bevist!</h2>
-        <p className="text-sm text-muted-foreground">
-          Nå står de i repetisjonskøen. Gå til Repeter for å bekrefte mestringen.
-        </p>
+        <h2 className="font-heading text-xl text-dg mb-2">{t.allProven}</h2>
+        <p className="text-sm text-muted-foreground">{t.allProvenSub}</p>
       </div>
     );
   }
@@ -332,7 +332,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
     <div className="flex gap-6 items-start max-w-6xl">
       <div className="flex-1 min-w-0">
         <div className="mb-1 text-xs text-muted-foreground font-medium uppercase tracking-wider">
-          Konsept {positionLabel} av {totalCount}
+          {t.conceptOf(positionLabel, totalCount)}
         </div>
         <h2 className="font-heading text-xl text-dg mb-1">{current!.title}</h2>
         <div className="w-full bg-black/8 rounded-full h-1 mb-6">
@@ -348,13 +348,13 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
 
         <div className="mb-3">
           <p className="text-xs font-semibold text-dg mb-1 uppercase tracking-wider">
-            Før du sjekker: hvor trygg føler du deg på svaret ditt?
+            {t.confidenceLabel}
           </p>
           <p className="text-[11px] text-muted-foreground mb-2 leading-relaxed">
-            Tren deg på å forutse hvordan du ligger an — AI-en tar det med i vurderingen og sier om du traff på din egen selvvurdering.
+            {t.confidenceSubLabel}
           </p>
           <div className="flex gap-2">
-            {CONFIDENCE_OPTIONS.map((opt) => {
+            {t.confidenceOptions.map((opt) => {
               const selected = confidence === opt.value;
               return (
                 <button
@@ -377,7 +377,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
         <textarea
           value={answer}
           onChange={(e) => { setAnswer(e.target.value); setEvaluation(null); }}
-          placeholder="Skriv svaret ditt her…"
+          placeholder={t.answerPlaceholder}
           rows={4}
           className="w-full px-3.5 py-3 border border-black/15 rounded-md text-sm leading-relaxed resize-y focus:outline-none focus:border-gold transition-colors mb-3"
         />
@@ -386,9 +386,8 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
           onClick={evaluate}
           disabled={!answer.trim() || !confidence || loading}
           className="bg-dg text-cream px-7 py-2.5 rounded text-sm font-semibold hover:bg-mg transition-colors disabled:opacity-40 disabled:cursor-not-allowed mb-4"
-          title={!confidence ? "Velg tiltro først" : undefined}
         >
-          {loading ? "Evaluerer…" : "Sjekk svaret"}
+          {loading ? t.checkBtnLoading : t.checkBtn}
         </button>
 
         {evaluation && (
@@ -400,13 +399,13 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
                 onClick={confirmMastery}
                 className="bg-lg text-cream px-5 py-2 rounded text-xs font-semibold hover:bg-mg transition-colors"
               >
-                ✓ Bevist — til repetisjon
+                {t.confirmMastery}
               </button>
               <button
                 onClick={markIncorrect}
                 className="border border-black/15 px-5 py-2 rounded text-xs text-muted-foreground hover:border-gold hover:text-dg transition-all"
               >
-                ↻ Prøv igjen
+                {t.tryAgain}
               </button>
               {!elaborationQuestion && (
                 <button
@@ -415,7 +414,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
                   className="border border-gold/40 text-dg px-5 py-2 rounded text-xs font-medium hover:bg-gold/10 transition-all disabled:opacity-40"
                   title="Forankre forståelsen med ett utvidende spørsmål"
                 >
-                  {elaborationLoading ? "Henter spørsmål…" : "🧠 Gå dypere"}
+                  {elaborationLoading ? t.fetchingQuestion : t.goDeeper}
                 </button>
               )}
             </div>
@@ -423,14 +422,14 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
             {elaborationQuestion && (
               <div className="mt-4 pt-4 border-t border-black/6">
                 <p className="text-[11px] font-semibold text-dg uppercase tracking-wider mb-2">
-                  Forankringsspørsmål
+                  {t.anchorQuestion}
                 </p>
                 <p className="text-sm text-dg leading-relaxed mb-3">{elaborationQuestion}</p>
 
                 <textarea
                   value={elaborationAnswer}
                   onChange={(e) => setElaborationAnswer(e.target.value)}
-                  placeholder="Svar fritt — dette er kun for å forankre, ikke for poeng…"
+                  placeholder={t.elaborationPlaceholder}
                   rows={3}
                   disabled={elaborationFeedback !== null}
                   className="w-full px-3 py-2 border border-black/15 rounded text-sm leading-relaxed resize-y focus:outline-none focus:border-gold transition-colors mb-2 disabled:bg-black/5"
@@ -442,7 +441,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
                     disabled={!elaborationAnswer.trim() || elaborationFeedbackLoading}
                     className="bg-dg text-cream px-5 py-2 rounded text-xs font-semibold hover:bg-mg transition-colors disabled:opacity-40"
                   >
-                    {elaborationFeedbackLoading ? "Vurderer…" : "Send svar"}
+                    {elaborationFeedbackLoading ? t.evaluating : t.submitAnswer}
                   </button>
                 )}
 
@@ -459,16 +458,14 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
 
       <div className="w-80 shrink-0 sticky top-6 flex flex-col bg-white border border-black/8 rounded-md overflow-hidden" style={{ maxHeight: "calc(100vh - 140px)" }}>
         <div className="px-4 py-3 border-b border-black/6">
-          <h3 className="font-heading text-sm text-dg">Spør AI-en</h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Om konseptet eller noe fra artikkelen.
-          </p>
+          <h3 className="font-heading text-sm text-dg">{t.chatTitle}</h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">{t.chatSubtitle}</p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
           {chatHistory.length === 0 && (
             <p className="text-xs text-muted-foreground italic text-center mt-4 leading-relaxed">
-              Trenger du et hint, vil teste forståelsen din, eller lure på en detalj fra teksten? Spør her.
+              {t.chatEmpty}
             </p>
           )}
           {chatHistory.map((msg, i) => (
@@ -487,7 +484,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
               )}
             </div>
           ))}
-          {chatLoading && <div className="text-xs text-muted-foreground italic">AI skriver…</div>}
+          {chatLoading && <div className="text-xs text-muted-foreground italic">{t.chatLoading}</div>}
           <div ref={chatBottomRef} />
         </div>
 
@@ -496,7 +493,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendChat()}
-            placeholder="Hint, tanke eller spørsmål…"
+            placeholder={t.chatInputPlaceholder}
             className="flex-1 px-3 py-2 border border-black/15 rounded text-sm focus:outline-none focus:border-gold transition-colors"
           />
           <button
@@ -504,7 +501,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
             disabled={!chatInput.trim() || chatLoading}
             className="bg-dg text-cream px-4 py-2 rounded text-sm hover:bg-mg transition-colors disabled:opacity-40"
           >
-            Send
+            {t.sendBtn}
           </button>
         </div>
       </div>
@@ -527,11 +524,12 @@ function HurtigsjekCard({
   onReveal: () => void;
   onDismiss: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <div className="flex gap-6 items-start max-w-6xl">
       <div className="flex-1 min-w-0">
         <div className="mb-1 text-xs text-muted-foreground font-medium uppercase tracking-wider">
-          Hurtigsjekk
+          {t.quickCheck}
         </div>
         <h2 className="font-heading text-xl text-dg mb-1">{concept.title}</h2>
         <div className="w-full bg-black/8 rounded-full h-1 mb-6" />
@@ -543,7 +541,7 @@ function HurtigsjekCard({
         <textarea
           value={answer}
           onChange={(e) => onAnswerChange(e.target.value)}
-          placeholder="Skriv svaret ditt her…"
+          placeholder={t.answerPlaceholder}
           rows={4}
           className="w-full px-3.5 py-3 border border-black/15 rounded-md text-sm leading-relaxed resize-y focus:outline-none focus:border-gold transition-colors mb-3"
         />
@@ -554,12 +552,12 @@ function HurtigsjekCard({
             disabled={!answer.trim()}
             className="bg-dg text-cream px-7 py-2.5 rounded text-sm font-semibold hover:bg-mg transition-colors disabled:opacity-40 disabled:cursor-not-allowed mb-4"
           >
-            Vis svar
+            {t.revealBtn}
           </button>
         ) : (
           <>
             <div className="bg-white border border-black/8 rounded-md p-4 mb-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Fasit</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">{t.answerKey}</p>
               <p className="text-sm leading-relaxed text-gray-800">{concept.flashcard_back}</p>
             </div>
             <div className="flex gap-3">
@@ -567,19 +565,19 @@ function HurtigsjekCard({
                 onClick={onDismiss}
                 className="flex-1 border border-red-200 bg-red-50 text-red-700 py-2.5 rounded text-sm font-medium hover:bg-red-100 transition-colors"
               >
-                Husket ikke
+                {t.forgot}
               </button>
               <button
                 onClick={onDismiss}
                 className="flex-1 border border-gold/40 bg-gold/8 text-dg py-2.5 rounded text-sm font-medium hover:bg-gold/15 transition-colors"
               >
-                Usikkert
+                {t.uncertain}
               </button>
               <button
                 onClick={onDismiss}
                 className="flex-1 border border-lg/30 bg-green-50 text-lg py-2.5 rounded text-sm font-medium hover:bg-green-100 transition-colors"
               >
-                Kunne det
+                {t.remembered}
               </button>
             </div>
           </>

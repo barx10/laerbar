@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Concept } from "@/lib/types";
+import { useLanguage } from "@/lib/language-context";
 import {
   applyGrade,
   daysUntilNext,
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function RepetitionTab({ concepts, onGrade }: Props) {
+  const { t } = useLanguage();
   // Snapshot køen ved mount. Hvis vi regner den ut på hver render, faller graderte
   // konsepter ut av isDue-filteret, index kommer ut av synk med queue-lengden og
   // queue[index] blir undefined → krasj.
@@ -51,9 +53,9 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
     return (
       <div className="max-w-2xl text-center py-12">
         <div className="text-3xl mb-4 opacity-40">🔁</div>
-        <h2 className="font-heading text-lg text-dg mb-2">Ingenting å repetere ennå</h2>
+        <h2 className="font-heading text-lg text-dg mb-2">{t.nothingYet}</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Bevis først at du kan konseptene i Lær-fanen. Derfra legger de seg inn til repetisjon.
+          {t.nothingYetSub}
         </p>
       </div>
     );
@@ -64,16 +66,16 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
       <div className="max-w-2xl text-center py-12">
         <div className="text-3xl mb-4">✓</div>
         <h2 className="font-heading text-lg text-dg mb-2">
-          {done ? "Dagens repetisjon fullført!" : "Ingen kort klar i dag"}
+          {done ? t.allDone : t.noneReadyToday}
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
           {nextDays === 0
-            ? "Neste kort blir klart senere i dag."
+            ? t.nextLaterToday
             : nextDays === 1
-            ? "Neste kort er klart i morgen."
+            ? t.nextTomorrow
             : nextDays
-            ? `Neste kort er klart om ${nextDays} dager.`
-            : "Alle kort er repetert."}
+            ? t.nextInDays(nextDays)
+            : t.allReviewed}
         </p>
       </div>
     );
@@ -87,21 +89,21 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
     <div className="max-w-2xl">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="font-heading text-xl text-dg mb-1">Repetisjon</h2>
+          <h2 className="font-heading text-xl text-dg mb-1">{t.repetitionTitle}</h2>
           <p className="text-sm text-muted-foreground">
-            {index + 1} av {queue.length} klar i dag
+            {t.repetitionOf(index + 1, queue.length)}
           </p>
         </div>
         <div className="flex gap-2">
           {lapses > 0 && (
             <div className="text-xs text-red-700 border border-red-200 bg-red-50 rounded px-3 py-1.5">
-              {lapses} {lapses === 1 ? "bom" : "bommer"}
+              {t.lapse(lapses)}
             </div>
           )}
           <div className="text-xs text-muted-foreground border border-black/10 rounded px-3 py-1.5">
             {confirmations < MASTERY_THRESHOLD
-              ? `${confirmations}/${MASTERY_THRESHOLD} bekreftet`
-              : "Mestret"}
+              ? t.confirmedOf(confirmations, MASTERY_THRESHOLD)
+              : t.mastered}
           </div>
         </div>
       </div>
@@ -122,7 +124,7 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
             style={{ backfaceVisibility: "hidden" }}
           >
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-5">
-              Spørsmål · klikk for å snu
+              {t.cardQuestion}
             </p>
             <p className="font-heading text-lg text-dg text-center leading-relaxed">
               {pickQuestionVariant(current)}
@@ -134,7 +136,7 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
             style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           >
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-5">
-              Svar · klikk for å snu
+              {t.cardAnswer}
             </p>
             <p className="font-heading text-lg text-dg text-center leading-relaxed">
               {current.flashcard_back}
@@ -149,32 +151,32 @@ export default function RepetitionTab({ concepts, onGrade }: Props) {
             onClick={() => rate("igjen")}
             className="flex-1 border border-red-200 bg-red-50 text-red-700 py-2.5 rounded text-sm font-medium hover:bg-red-100 transition-colors"
           >
-            Husket ikke
+            {t.forgot}
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {previewInterval("igjen", current)} dag
+              {t.inDays(previewInterval("igjen", current))}
             </span>
           </button>
           <button
             onClick={() => rate("usikkert")}
             className="flex-1 border border-gold/40 bg-gold/8 text-dg py-2.5 rounded text-sm font-medium hover:bg-gold/15 transition-colors"
           >
-            Usikkert
+            {t.uncertain}
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {previewInterval("usikkert", current)} dager
+              {t.inDays(previewInterval("usikkert", current))}
             </span>
           </button>
           <button
             onClick={() => rate("kunne")}
             className="flex-1 border border-lg/30 bg-green-50 text-lg py-2.5 rounded text-sm font-medium hover:bg-green-100 transition-colors"
           >
-            Kunne det
+            {t.remembered}
             <span className="block text-xs font-normal opacity-70 mt-0.5">
-              om {previewInterval("kunne", current)} dager
+              {t.inDays(previewInterval("kunne", current))}
             </span>
           </button>
         </div>
       ) : (
-        <p className="text-center text-xs text-muted-foreground">Snu kortet for å vurdere</p>
+        <p className="text-center text-xs text-muted-foreground">{t.flipToGrade}</p>
       )}
     </div>
   );

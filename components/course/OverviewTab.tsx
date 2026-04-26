@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Concept, Course } from "@/lib/types";
 import { isDue, isInReview, isMastered, isUnseen } from "@/lib/srs";
 import Markdown from "@/components/shared/Markdown";
+import { useLanguage } from "@/lib/language-context";
 
 interface Props {
   course: Course;
@@ -19,6 +20,7 @@ function statusOf(concept: Concept): Status {
 }
 
 export default function OverviewTab({ course, onUpdate }: Props) {
+  const { lang, t } = useLanguage();
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(false);
   const fetchedForCourseId = useRef<string | null>(null);
@@ -42,6 +44,7 @@ export default function OverviewTab({ course, onUpdate }: Props) {
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
         "X-Model": model,
+        "X-Language": lang,
       },
       body: JSON.stringify({ sourceText: course.source_text }),
     })
@@ -65,38 +68,38 @@ export default function OverviewTab({ course, onUpdate }: Props) {
     <div className="max-w-3xl">
       <div className="mb-5">
         <h2 className="font-heading text-xl text-dg mb-1">{course.title}</h2>
-        <p className="text-xs text-muted-foreground uppercase tracking-wider">Oversikt</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider">{t.oversiktLabel}</p>
       </div>
 
       {(course.summary || summaryLoading || summaryError) && (
         <div className="bg-white rounded-md border border-black/8 p-5 mb-5">
           <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-2 font-medium">
-            Kort fortalt
+            {t.kortFortalt}
           </div>
           {course.summary ? (
             <Markdown text={course.summary} className="text-sm leading-relaxed text-gray-800" />
           ) : summaryLoading ? (
-            <p className="text-sm text-muted-foreground italic">Genererer sammendrag…</p>
+            <p className="text-sm text-muted-foreground italic">{t.generatingSummary}</p>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Klarte ikke å lage sammendrag akkurat nå. Prøv igjen senere.
+              {t.summaryError}
             </p>
           )}
         </div>
       )}
 
       <div className="grid grid-cols-4 gap-3 mb-6">
-        <StatCard label="Nye" value={newCount} tone="neutral" />
-        <StatCard label="Under repetisjon" value={review} tone="gold" />
-        <StatCard label="Mestret" value={mastered} tone="green" />
-        <StatCard label="Klar i dag" value={dueToday} tone={dueToday > 0 ? "gold" : "neutral"} />
+        <StatCard label={t.statNew} value={newCount} tone="neutral" />
+        <StatCard label={t.statReview} value={review} tone="gold" />
+        <StatCard label={t.statMastered} value={mastered} tone="green" />
+        <StatCard label={t.statDueToday} value={dueToday} tone={dueToday > 0 ? "gold" : "neutral"} />
       </div>
 
       <div className="mb-3">
-        <h3 className="font-heading text-base text-dg mb-1">Kjernekonsepter</h3>
+        <h3 className="font-heading text-base text-dg mb-1">{t.conceptsHeading}</h3>
         <p className="text-xs text-muted-foreground">
-          {mastered} av {course.concepts.length} mestret
-          {review > 0 ? ` · ${review} under repetisjon` : ""}
+          {t.masteredOf(mastered, course.concepts.length)}
+          {review > 0 ? t.underReviewCount(review) : ""}
         </p>
       </div>
 
@@ -135,6 +138,7 @@ function StatCard({
 }
 
 function ConceptCard({ concept, index }: { concept: Concept; index: number }) {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const status = statusOf(concept);
 
@@ -165,7 +169,7 @@ function ConceptCard({ concept, index }: { concept: Concept; index: number }) {
           <span className="font-heading text-base text-dg">{concept.title}</span>
           {status === "review" && (
             <span className="text-[11px] text-muted-foreground">
-              {concept.mastery_confirmations ?? 0}/2 bekreftet
+              {t.confirmedCount(concept.mastery_confirmations ?? 0)}
             </span>
           )}
         </div>
