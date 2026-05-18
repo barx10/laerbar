@@ -8,12 +8,6 @@ export const GEMINI_FAST_OPTS = {
   },
 } as const;
 
-export const GEMINI_NO_THINK_OPTS = {
-  google: {
-    thinkingConfig: { thinkingLevel: "none" },
-  },
-} as const;
-
 export function createGeminiModel(apiKey: string, modelId: string) {
   return createGoogleGenerativeAI({ apiKey })(modelId);
 }
