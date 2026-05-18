@@ -20,7 +20,7 @@ const ConceptSchema = z.object({
 
 const OutputSchema = z.object({
   title: z.string(),
-  concepts: z.array(ConceptSchema).min(7).max(12),
+  concepts: z.array(ConceptSchema).min(3).max(12),
 });
 
 export async function POST(req: NextRequest) {
