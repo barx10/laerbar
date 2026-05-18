@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
 import { guardApiRequest } from "@/lib/api-guard";
 import { getRequestContext } from "@/lib/api-context";
-import { createGeminiModel, GEMINI_NO_THINK_OPTS } from "@/lib/ai";
+import { createGeminiModel } from "@/lib/ai";
 import { noDashesInstruction } from "@/lib/prompts";
 
 const SOURCE_TEXT_CAP = 30 * 1024;
@@ -53,7 +53,6 @@ ${trimmed}
     const { text } = await generateText({
       model,
       prompt: summaryPrompt,
-      providerOptions: GEMINI_NO_THINK_OPTS,
     });
     return NextResponse.json({ summary: text.trim() });
   } catch {
