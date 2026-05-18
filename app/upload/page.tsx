@@ -16,6 +16,36 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  async function uploadToGemini(f: File, apiKey: string): Promise<string> {
+    const boundary = "GeminiUpload" + Math.random().toString(36).slice(2, 10);
+    const enc = new TextEncoder();
+    const metaBytes = enc.encode(
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+      JSON.stringify({ file: { displayName: f.name } }) +
+      `\r\n`
+    );
+    const filePrefix = enc.encode(`--${boundary}\r\nContent-Type: application/pdf\r\n\r\n`);
+    const fileBytes = new Uint8Array(await f.arrayBuffer());
+    const closing = enc.encode(`\r\n--${boundary}--`);
+    const body = new Uint8Array(metaBytes.length + filePrefix.length + fileBytes.length + closing.length);
+    let off = 0;
+    body.set(metaBytes, off); off += metaBytes.length;
+    body.set(filePrefix, off); off += filePrefix.length;
+    body.set(fileBytes, off); off += fileBytes.length;
+    body.set(closing, off);
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart&key=${encodeURIComponent(apiKey)}`,
+      { method: "POST", headers: { "Content-Type": `multipart/related; boundary=${boundary}` }, body }
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message ?? t.uploadApiError);
+    }
+    const data = await res.json();
+    return data.file.uri as string;
+  }
+
   async function generate() {
     if (!file) return;
     const apiKey = localStorage.getItem("laerbar_google_key") ?? "";
@@ -28,14 +58,14 @@ export default function UploadPage() {
     setError("");
 
     const model = localStorage.getItem("laerbar_model") ?? "gemini-3.1-flash-lite";
-    const formData = new FormData();
-    formData.append("file", file);
 
     try {
+      const fileUri = await uploadToGemini(file, apiKey);
+
       const res = await fetch("/api/generate", {
         method: "POST",
-        headers: { "X-API-Key": apiKey, "X-Model": model, "X-Language": lang },
-        body: formData,
+        headers: { "Content-Type": "application/json", "X-API-Key": apiKey, "X-Model": model, "X-Language": lang },
+        body: JSON.stringify({ fileUri }),
       });
 
       if (!res.ok) {
