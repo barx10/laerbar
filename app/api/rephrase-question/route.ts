@@ -3,7 +3,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 import { guardApiRequest } from "@/lib/api-guard";
 import { getRequestContext } from "@/lib/api-context";
-import { createGeminiModel, GEMINI_FAST_OPTS } from "@/lib/ai";
+import { createGeminiModel, GEMINI_NO_THINK_OPTS } from "@/lib/ai";
 import { noDashesInstruction } from "@/lib/prompts";
 
 const OutputSchema = z.object({
@@ -81,7 +81,7 @@ Krav:
       model,
       schema: OutputSchema,
       prompt: rephrasePrompt,
-      providerOptions: GEMINI_FAST_OPTS,
+      providerOptions: GEMINI_NO_THINK_OPTS,
     });
 
     return NextResponse.json({ variants: result.object.variants });
