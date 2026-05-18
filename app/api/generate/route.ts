@@ -33,23 +33,27 @@ export async function POST(req: NextRequest) {
   }
   const { apiKey, modelId, lang } = ctx;
 
-  const formData = await req.formData();
-  const file = formData.get("file") as File | null;
-
-  if (!file) {
-    return NextResponse.json({ error: "Mangler fil" }, { status: 400 });
+  let fileUri: string;
+  try {
+    const body = await req.json();
+    fileUri = body?.fileUri;
+  } catch {
+    return NextResponse.json({ error: "Ugyldig forespørsel" }, { status: 400 });
   }
 
-  if (file.type !== "application/pdf") {
-    return NextResponse.json({ error: "Filen må være en PDF" }, { status: 415 });
+  if (!fileUri || typeof fileUri !== "string") {
+    return NextResponse.json({ error: "Mangler fil-URI" }, { status: 400 });
   }
 
-  if (file.size > 12 * 1024 * 1024) {
-    return NextResponse.json({ error: "Filen er for stor (maks 12MB)" }, { status: 400 });
+  let fileUrl: URL;
+  try {
+    fileUrl = new URL(fileUri);
+    if (!fileUrl.hostname.endsWith("googleapis.com")) {
+      throw new Error("not googleapis");
+    }
+  } catch {
+    return NextResponse.json({ error: "Ugyldig fil-URI" }, { status: 400 });
   }
-
-  const bytes = await file.arrayBuffer();
-  const base64 = Buffer.from(bytes).toString("base64");
 
   const model = createGeminiModel(apiKey, modelId);
 
@@ -98,7 +102,7 @@ Svar på norsk.`;
             content: [
               {
                 type: "file",
-                data: base64,
+                data: fileUrl,
                 mediaType: "application/pdf",
               },
               {
@@ -109,7 +113,7 @@ Svar på norsk.`;
           },
         ],
       }),
-      extractSourceText(model, base64),
+      extractSourceText(model, fileUrl),
     ]);
     return NextResponse.json({ ...conceptResult.object, source_text: sourceText });
   } catch (err) {
@@ -123,7 +127,7 @@ Svar på norsk.`;
 
 async function extractSourceText(
   model: LanguageModel,
-  base64: string,
+  fileUrl: URL,
 ): Promise<string> {
   try {
     const { text } = await generateText({
@@ -132,7 +136,7 @@ async function extractSourceText(
         {
           role: "user",
           content: [
-            { type: "file", data: base64, mediaType: "application/pdf" },
+            { type: "file", data: fileUrl, mediaType: "application/pdf" },
             {
               type: "text",
               text: `Returner det fulle tekstinnholdet fra dette dokumentet verbatim, altså ren tekst uten oppsummering, kommentarer eller markdown. Ikke omformuler. Hopp gjerne over sidetall og kolontitler, men behold selve teksten.`,
