@@ -89,11 +89,9 @@ Important about paraphrase: The answer key is the substance, not a specific word
 
 Write the feedback in this format:
 
-Part 1 – 2–3 sentences of flowing prose: one brief and specific acknowledgment of what was captured (one sentence max, no exaggerations), followed by an overall assessment.${calibrationGuide}
+2–3 sentences of flowing prose: one brief and specific acknowledgment of what was captured (one sentence max, no exaggerations), followed by an overall assessment.${calibrationGuide}
 
-Part 2 – Bullet points (only if something essential is missing): each bullet = one specific thing to improve or elaborate. Do not generate bullets if the answer covers the core.
-
-Part 3 – Verbatim (always include): on a new line, indented with >, show the correct formulation or key point as it should read. Write it as a finished formulation, not as an instruction.
+Then, if something essential is missing: bullet points where each bullet is a clear and direct statement of what the answer must include. Do not generate bullets if the answer covers the core.
 
 End with one clear closing sentence on its own line, without a bullet point:
 - "✓ You have demonstrated good understanding." if the answer substantially covers the core.
@@ -115,11 +113,9 @@ Viktig om omformuleringer: Fasiten er fasit, ikke en bestemt ordlyd. Hvis svaret
 
 Skriv tilbakemeldingen i dette formatet:
 
-Del 1 – 2–3 setninger med løpende prosa: én kort og konkret anerkjennelse av hva som ble fanget (maks én setning, ingen overdrivelser), etterfulgt av overordnet vurdering.${calibrationGuide}
+2–3 setninger med løpende prosa: kort og konkret anerkjennelse av hva som ble fanget (maks én setning, ingen overdrivelser), etterfulgt av overordnet vurdering.${calibrationGuide}
 
-Del 2 – Kulepunkter (kun hvis noe vesentlig mangler): hvert punkt = én konkret ting å forbedre eller utdype. Ikke lag kulepunkter om svaret dekker kjernen.
-
-Del 3 – Verbatim (alltid med): vis på ny linje, innrykket med >, den korrekte formuleringen eller nøkkelpoenget, slik det bør stå. Skriv det som en ferdig formulering, ikke som en instruksjon.
+Deretter, hvis noe vesentlig mangler: kulepunkter der hvert punkt er en tydelig og direkte beskjed om hva svaret må inneholde. Ikke lag kulepunkter om svaret dekker kjernen.
 
 Avslutt med én tydelig avslutningssetning på egen linje, uten kulepunkt:
 - "✓ Du har vist god forståelse." hvis svaret i hovedsak dekker kjernen.
