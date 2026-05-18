@@ -27,7 +27,7 @@ export default function UploadPage() {
     setLoading(true);
     setError("");
 
-    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.1-flash-lite-preview";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.1-flash-lite";
     const formData = new FormData();
     formData.append("file", file);
 
