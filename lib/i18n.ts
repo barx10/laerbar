@@ -321,7 +321,7 @@ export const no: Translations = {
     "Last ned kurset som en selvinneholdt HTML-fil du kan åpne offline. Inneholder alle konsepter, spørsmål, svar og flashcards.",
   downloadBtn: "Last ned HTML",
 
-  uploadInstruction: "Klikk eller dra hit · PDF (maks 20MB)",
+  uploadInstruction: "Klikk eller dra hit · PDF (maks 12MB)",
   uploadSubtext: "Kun tekst leses — illustrasjoner analyseres ikke",
 
   uploadPageTitle: "Ta et læringsløp",
@@ -510,7 +510,7 @@ export const en: Translations = {
     "Download the course as a self-contained HTML file you can open offline. Includes all concepts, questions, answers, and flashcards.",
   downloadBtn: "Download HTML",
 
-  uploadInstruction: "Click or drag here · PDF (max 20MB)",
+  uploadInstruction: "Click or drag here · PDF (max 12MB)",
   uploadSubtext: "Only text is read — illustrations are not analysed",
 
   uploadPageTitle: "Start a learning path",

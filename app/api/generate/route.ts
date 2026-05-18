@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Filen må være en PDF" }, { status: 415 });
   }
 
-  if (file.size > 20 * 1024 * 1024) {
-    return NextResponse.json({ error: "Filen er for stor (maks 20MB)" }, { status: 400 });
+  if (file.size > 12 * 1024 * 1024) {
+    return NextResponse.json({ error: "Filen er for stor (maks 12MB)" }, { status: 400 });
   }
 
   const bytes = await file.arrayBuffer();

@@ -25,7 +25,10 @@ export default function SettingsModal({ open, onClose }: Props) {
   useEffect(() => {
     if (open) {
       setApiKey(localStorage.getItem("laerbar_google_key") ?? "");
-      setModel(localStorage.getItem("laerbar_model") ?? MODELS[0].id);
+      const stored = localStorage.getItem("laerbar_model") ?? MODELS[0].id;
+      const valid = MODELS.find((m) => m.id === stored) ? stored : MODELS[0].id;
+      if (valid !== stored) localStorage.setItem("laerbar_model", valid);
+      setModel(valid);
     }
   }, [open]);
 
