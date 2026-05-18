@@ -87,11 +87,13 @@ Answer given: ${userAnswer}${confidenceLine}
 
 Important about paraphrase: The answer key is the substance, not a specific wording. If the answer expresses the same point in different words, it counts as coverage, not a gap. Look for substantive gaps, not phrasing differences.
 
-Write the feedback as flowing prose in 3 to 5 sentences. No bullet points. No headings like "What you got right:", "Self-assessment:", or "Conclusion:". Write as if speaking face to face.
+Write the feedback in this format:
 
-Structure:
-- At most one acknowledgment, brief and specific, at the very start (one sentence, no layers of praise). No exaggerations ("brilliant", "great job"), no emoji. Just a measured note of what was captured.
-- The rest should be constructive. If the answer is missing something essential (beyond mere paraphrase), point it out concretely. If the answer covers the core, do not fabricate a gap, but point to where the phrasing can be sharpened, go one level deeper, or connect the point to something else in the material. Even a good answer has room to stretch.${calibrationGuide}
+Part 1 – 2–3 sentences of flowing prose: one brief and specific acknowledgment of what was captured (one sentence max, no exaggerations), followed by an overall assessment.${calibrationGuide}
+
+Part 2 – Bullet points (only if something essential is missing): each bullet = one specific thing to improve or elaborate. Do not generate bullets if the answer covers the core.
+
+Part 3 – Verbatim (always include): on a new line, indented with >, show the correct formulation or key point as it should read. Write it as a finished formulation, not as an instruction.
 
 End with one clear closing sentence on its own line, without a bullet point:
 - "✓ You have demonstrated good understanding." if the answer substantially covers the core.
@@ -111,11 +113,13 @@ Svaret som ble skrevet: ${userAnswer}${confidenceLine}
 
 Viktig om omformuleringer: Fasiten er fasit, ikke en bestemt ordlyd. Hvis svaret uttrykker samme poeng med andre ord, er det dekning, ikke et hull. Eksempel: "lærere bruker timen til norsk eller matte" dekker "administrativ sluttstasjon / nedprioritert fag". Du skal lete etter *substansielle* hull, ikke ordforskjeller.
 
-Skriv tilbakemeldingen som løpende prosa på 3 til 5 setninger. Ikke bruk kulepunkter. Ikke bruk overskrifter som "Hva du har riktig:", "Selvvurdering:" eller "Avslutning:". Skriv som om du snakker ansikt til ansikt.
+Skriv tilbakemeldingen i dette formatet:
 
-Struktur:
-- Maks én anerkjennelse, kort og konkret, helt i starten (én setning, ikke flere lag med ros). Ingen overdrivelser ("strålende", "veldig bra"), ingen smil og emoji. Bare nøkternt hva som ble fanget.
-- Resten skal være konstruktiv. Hvis svaret mangler noe vesentlig (utover ren omformulering), pek på det konkret. Hvis svaret faktisk dekker kjernen, ikke fabrikkér et hull, men pek på hvor du kan skjerpe formuleringen, gå et hakk dypere, eller knytte poenget til noe annet i fagstoffet. Selv et godt svar har en strekkmuligheter.${calibrationGuide}
+Del 1 – 2–3 setninger med løpende prosa: én kort og konkret anerkjennelse av hva som ble fanget (maks én setning, ingen overdrivelser), etterfulgt av overordnet vurdering.${calibrationGuide}
+
+Del 2 – Kulepunkter (kun hvis noe vesentlig mangler): hvert punkt = én konkret ting å forbedre eller utdype. Ikke lag kulepunkter om svaret dekker kjernen.
+
+Del 3 – Verbatim (alltid med): vis på ny linje, innrykket med >, den korrekte formuleringen eller nøkkelpoenget, slik det bør stå. Skriv det som en ferdig formulering, ikke som en instruksjon.
 
 Avslutt med én tydelig avslutningssetning på egen linje, uten kulepunkt:
 - "✓ Du har vist god forståelse." hvis svaret i hovedsak dekker kjernen.
