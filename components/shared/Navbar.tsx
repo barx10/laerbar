@@ -152,7 +152,7 @@ function HelpStepsNo() {
         <span className="text-dg font-medium">aistudio.google.com</span>.
       </Step>
       <Step n={2} title="Last opp fagstoff">
-        Trykk <strong>Nytt kurs</strong> og dra inn en PDF (maks 20 MB). KI trekker ut 5–10 kjernekonsepter og lagrer samtidig teksten så du senere kan spørre AI-en direkte om artikkelen.
+        Trykk <strong>Nytt kurs</strong> og dra inn en PDF (maks 12 MB). KI trekker ut 5–10 kjernekonsepter og lagrer samtidig teksten så du senere kan spørre AI-en direkte om artikkelen.
       </Step>
       <Step n={3} title="Lær: vurder selv før du sjekker">
         I <strong>Lær</strong>-fanen får du ett åpent spørsmål om gangen. Før du sender svaret, velger du hvor trygg du er:{" "}
@@ -185,7 +185,7 @@ function HelpStepsEn() {
         <span className="text-dg font-medium">aistudio.google.com</span>.
       </Step>
       <Step n={2} title="Upload study material">
-        Click <strong>New course</strong> and drop in a PDF (max 20 MB). The AI extracts 5–10 core concepts and saves the text so you can later chat with the AI directly about the article.
+        Click <strong>New course</strong> and drop in a PDF (max 12 MB). The AI extracts 5–10 core concepts and saves the text so you can later chat with the AI directly about the article.
       </Step>
       <Step n={3} title="Learn: rate yourself before checking">
         In the <strong>Learn</strong> tab you get one open question at a time. Before submitting your answer, choose your confidence:{" "}
