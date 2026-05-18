@@ -132,6 +132,7 @@ async function extractSourceText(
   try {
     const { text } = await generateText({
       model,
+      maxOutputTokens: 14000,
       messages: [
         {
           role: "user",
