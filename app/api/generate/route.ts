@@ -20,7 +20,7 @@ const ConceptSchema = z.object({
 
 const OutputSchema = z.object({
   title: z.string(),
-  concepts: z.array(ConceptSchema).min(3).max(12),
+  concepts: z.array(ConceptSchema).min(7).max(12),
 });
 
 export async function POST(req: NextRequest) {
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   const model = createGeminiModel(apiKey, modelId);
 
   const conceptPrompt = lang === "en"
-    ? `You are a pedagogical expert. Analyse this study material and extract the 5 to 10 most important core concepts.
+    ? `You are a pedagogical expert. Analyse this study material and extract the 7 to 12 most important core concepts.
 
 For each concept create:
 - A clear concept name (title)
@@ -74,7 +74,7 @@ Questions should challenge reflection, not just "what is X?" but "why / how / in
 ${noDashesInstruction("en")} Applies to every field.
 
 Answer in English.`
-    : `Du er en pedagogisk ekspert. Analyser dette fagstoffet og trekk ut de 5 til 10 viktigste kjernekonseptene.
+    : `Du er en pedagogisk ekspert. Analyser dette fagstoffet og trekk ut de 7 til 12 viktigste kjernekonseptene.
 
 For hvert konsept skal du lage:
 - Et klart konseptnavn (title)
