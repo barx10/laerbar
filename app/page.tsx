@@ -121,7 +121,7 @@ export default function Home() {
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(course.id); }}
-                      className="text-muted-foreground hover:text-red-500 transition-colors text-lg leading-none opacity-0 group-hover:opacity-100 flex-shrink-0"
+                      className="text-muted-foreground hover:text-red-500 transition-colors text-lg leading-none flex-shrink-0"
                       title={t.deleteCourse}
                     >
                       &times;
