@@ -5,7 +5,7 @@ import { exportBackup, importBackup, getCourses } from "@/lib/storage";
 import { useLanguage } from "@/lib/language-context";
 
 const MODELS = [
-  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash Lite" },
+  { id: "gemini-3.6-flash", label: "Gemini 3.6 Flash" },
   { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview" },
   { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite" },
 ] as const;

@@ -62,7 +62,7 @@ Inspirert av [fagdykk](https://github.com/barx10/fagdykk), men med fokus på int
 ### 4. Innstillinger
 - Modal tilgjengelig fra alle sider
 - Gemini API-nøkkel (lagres som `laerbar_google_key` i LocalStorage)
-- Modellvalg: Gemini 2.5 Flash Lite / Gemini 3 Flash Preview / Gemini 3.1 Flash Lite Preview
+- Modellvalg: Gemini 2.5 Flash Lite / Gemini 3 Flash Preview / Gemini 3.6 Flash
 
 ---
 

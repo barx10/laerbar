@@ -32,7 +32,7 @@ export default function OverviewTab({ course, onUpdate }: Props) {
     fetchedForCourseId.current = course.id;
 
     const apiKey = localStorage.getItem("laerbar_google_key") ?? "";
-    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.1-flash-lite";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.6-flash";
     if (!apiKey) return;
 
     setSummaryLoading(true);
