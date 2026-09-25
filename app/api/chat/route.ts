@@ -7,6 +7,31 @@ import { noDashesInstruction } from "@/lib/prompts";
 
 const SOURCE_TEXT_PROMPT_CAP = 30 * 1024;
 
+type AIResponseStyle = "balanced" | "concise" | "detailed" | "socratic" | "examples";
+
+const styleInstructions: Record<AIResponseStyle, { no: string; en: string }> = {
+  balanced: {
+    no: "Vær kortfattet og konkret. Gi direkte svar på faktaspørsmål. Veiled kun når brukeren jobber aktivt med å forstå konseptet.",
+    en: "Be concise and concrete. Answer factual questions directly. Only guide when the user is actively working to understand the concept."
+  },
+  concise: {
+    no: "Svar SVÆRT kort og presist. Maks 2-3 setninger. Ingen unødvendige forklaringer. Bruk punktlister der det passer. Prioriter rask oversikt over dybde.",
+    en: "Answer VERY briefly and precisely. Max 2-3 sentences. No unnecessary explanations. Use bullet points where appropriate. Prioritize quick overview over depth."
+  },
+  detailed: {
+    no: "Gi grundige, utdypende svar. Forklar sammenhenger, gi bakgrunn, nevn unntak og nynanser. Bruk eksempler for å illustre. Anta at brukeren vil forstå dypt.",
+    en: "Give thorough, in-depth answers. Explain connections, provide background, mention exceptions and nuances. Use examples to illustrate. Assume the user wants deep understanding."
+  },
+  socratic: {
+    no: "IKKE gi direkte svar. Still motspørsmål, gi hints, peke på sammenhenger. Ta brukeren ett skritt videre per svar. Vær tålmodig og oppmuntrende. Aldri si fasitet rett ut.",
+    en: "Do NOT give direct answers. Ask counter-questions, give hints, point to connections. Move the user one step forward per response. Be patient and encouraging. Never give away the answer."
+  },
+  examples: {
+    no: "Fokuser på konkrete eksempler og illustrasjoner. Forklar konsepter gjennom bruksområder, analogier, caser. Minimal abstrakt teori. Vis, ikke bare fortell.",
+    en: "Focus on concrete examples and illustrations. Explain concepts through use cases, analogies, cases. Minimal abstract theory. Show, don't just tell."
+  }
+};
+
 export async function POST(req: NextRequest) {
   const blocked = guardApiRequest(req);
   if (blocked) return blocked;
@@ -17,7 +42,8 @@ export async function POST(req: NextRequest) {
   }
   const { apiKey, modelId, lang } = ctx;
 
-  const { concept, conceptAnswer, sourceText, message, history } = await req.json();
+  const { concept, conceptAnswer, sourceText, message, history, responseStyle } = await req.json();
+  const style: AIResponseStyle = responseStyle ?? "balanced";
 
   const model = createGeminiModel(apiKey, modelId);
 
@@ -39,6 +65,8 @@ export async function POST(req: NextRequest) {
       ? `\n\nNote: The source document is not available in this conversation, only the concept and answer key. If asked about details that require the text (e.g. exact numbers, author, number of studies cited), state clearly that you do not have access to the document.`
       : `\n\nMerk: Selve kildedokumentet er ikke tilgjengelig i denne samtalen, bare konseptet og fasiten. Hvis du blir spurt om detaljer som krever teksten (f.eks. eksakte tall, forfatter, antall studier som ble sitert), si tydelig at du ikke har tilgang til dokumentet.`;
 
+  const styleInstruction = styleInstructions[style]?.[lang] ?? styleInstructions.balanced[lang];
+
   const systemPrompt = lang === "en"
     ? `You are a helpful AI tutor for adults acquiring new knowledge. Address the person directly in second person, never as "the student", "the user", or "the learner" in the third person.
 
@@ -55,7 +83,7 @@ Important:
 - Do not start responses with phrases like "Great question!", "Good thinking!" or similar praise.
 - If you are not certain about something, say so clearly. Do not guess.
 - ${noDashesInstruction("en")}
-- Be concise and concrete. Write in English, always in second person.`
+- ${styleInstruction}`
     : `Du er en hjelpsom AI-tutor for voksne som tilegner seg ny kunnskap. Du henvender deg direkte i du-form, aldri "eleven", "studenten" eller "brukeren" i tredjeperson.
 
 Personen du snakker med holder på å lære om konseptet "${concept}".
@@ -71,7 +99,7 @@ Viktig:
 - Ikke start svaret med fraser som "Bra spørsmål!", "Godt tenkt!" eller lignende ros.
 - Hvis du ikke vet noe sikkert, si det tydelig. Ikke gjett.
 - ${noDashesInstruction("no")}
-- Vær kortfattet og konkret. Svar på norsk, alltid i du-form.`;
+- ${styleInstruction}`;
 
   const messages = [
     ...(history ?? []).map((h: { role: string; text: string }) => ({

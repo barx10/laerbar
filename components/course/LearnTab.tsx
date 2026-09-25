@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Attempt, Concept } from "@/lib/types";
+import { Attempt, Concept, AIResponseStyle } from "@/lib/types";
 import { useLanguage } from "@/lib/language-context";
 import { applyFirstPass, isUnseen, today } from "@/lib/srs";
 import { logStudyToday } from "@/lib/study-log";
@@ -68,6 +68,12 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
+  const [responseStyle, setResponseStyle] = useState<AIResponseStyle>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("laerbar_response_style") as AIResponseStyle) || "balanced";
+    }
+    return "balanced";
+  });
   const [sessionProven, setSessionProven] = useState<Concept[]>([]);
   const [pendingChecks, setPendingChecks] = useState<Concept[]>([]);
   const [checkAnswer, setCheckAnswer] = useState("");
@@ -85,6 +91,10 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, chatLoading]);
+
+  useEffect(() => {
+    localStorage.setItem("laerbar_response_style", responseStyle);
+  }, [responseStyle]);
 
   function dismissCheck() {
     setPendingChecks((prev) => prev.slice(1));
@@ -275,6 +285,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
         sourceText: sourceText ?? "",
         message: userMsg,
         history: chatHistory,
+        responseStyle,
       }),
     });
 
@@ -457,9 +468,23 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
       </div>
 
       <div className="w-80 shrink-0 sticky top-6 flex flex-col bg-white border border-black/8 rounded-md overflow-hidden" style={{ maxHeight: "calc(100vh - 140px)" }}>
-        <div className="px-4 py-3 border-b border-black/6">
-          <h3 className="font-heading text-sm text-dg">{t.chatTitle}</h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">{t.chatSubtitle}</p>
+        <div className="px-4 py-3 border-b border-black/6 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h3 className="font-heading text-sm text-dg">{t.chatTitle}</h3>
+            <select
+              value={responseStyle}
+              onChange={(e) => setResponseStyle(e.target.value as AIResponseStyle)}
+              className="text-xs px-2 py-1 border border-black/15 rounded bg-white focus:outline-none focus:border-gold"
+              aria-label={t.responseStyleLabel}
+            >
+              {t.responseStyleOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-[11px] text-muted-foreground">{t.chatSubtitle}</p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
