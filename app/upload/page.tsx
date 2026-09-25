@@ -57,7 +57,7 @@ export default function UploadPage() {
     setLoading(true);
     setError("");
 
-    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.6-flash";
+    const model = localStorage.getItem("laerbar_model") ?? "gemini-3.8-flash";
 
     try {
       const fileUri = await uploadToGemini(file, apiKey);
