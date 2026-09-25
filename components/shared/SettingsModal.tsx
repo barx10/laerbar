@@ -8,8 +8,6 @@ const MODELS = [
   { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash (anbefalt)" },
   { id: "gemini-3.7-flash", label: "Gemini 3.7 Flash" },
   { id: "gemini-3.6-flash", label: "Gemini 3.6 Flash" },
-  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview" },
-  { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite" },
 ] as const;
 
 interface Props {
