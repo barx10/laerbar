@@ -25,6 +25,13 @@ export interface Concept {
   };
 }
 
+export type AIResponseStyle =
+  | "balanced"      // Balansert (standard)
+  | "concise"       // Korte, presise svar
+  | "detailed"      // Utdypende, omfattende
+  | "socratic"      // Hints, motspørsmål, veiledning
+  | "examples";     // Fokus på eksempler og illustrasjoner
+
 export interface Course {
   id: string;
   title: string;

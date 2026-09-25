@@ -85,6 +85,8 @@ export interface Translations {
   chatInputPlaceholder: string;
   chatLoading: string;
   sendBtn: string;
+  responseStyleLabel: string;
+  responseStyleOptions: Array<{ value: "balanced" | "concise" | "detailed" | "socratic" | "examples"; label: string }>;
   quickCheck: string;
   revealBtn: string;
   answerKey: string;
@@ -282,6 +284,14 @@ export const no: Translations = {
   chatInputPlaceholder: "Hint, tanke eller spørsmål…",
   chatLoading: "AI skriver…",
   sendBtn: "Send",
+  responseStyleLabel: "Responsstil",
+  responseStyleOptions: [
+    { value: "balanced", label: "Balansert" },
+    { value: "concise", label: "Konsis" },
+    { value: "detailed", label: "Detaljert" },
+    { value: "socratic", label: "Sokratisk" },
+    { value: "examples", label: "Eksempler" },
+  ],
   quickCheck: "Hurtigsjekk",
   revealBtn: "Vis svar",
   answerKey: "Fasit",
@@ -470,6 +480,14 @@ export const en: Translations = {
   chatInputPlaceholder: "Hint, thought, or question…",
   chatLoading: "AI is writing…",
   sendBtn: "Send",
+  responseStyleLabel: "Response style",
+  responseStyleOptions: [
+    { value: "balanced", label: "Balanced" },
+    { value: "concise", label: "Concise" },
+    { value: "detailed", label: "Detailed" },
+    { value: "socratic", label: "Socratic" },
+    { value: "examples", label: "Examples" },
+  ],
   quickCheck: "Quick check",
   revealBtn: "Show answer",
   answerKey: "Answer key",
