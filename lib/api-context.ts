@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { DEFAULT_GEMINI_MODEL } from "./ai";
+import { normalizeThinkingLevel, type ThinkingLevel } from "./thinking";
 
 export type RequestLang = "no" | "en";
 
@@ -7,6 +8,7 @@ export type RequestContext = {
   apiKey: string;
   modelId: string;
   lang: RequestLang;
+  thinking: ThinkingLevel;
 };
 
 export function getRequestContext(req: NextRequest): RequestContext | null {
@@ -14,5 +16,6 @@ export function getRequestContext(req: NextRequest): RequestContext | null {
   if (!apiKey) return null;
   const modelId = req.headers.get("X-Model") ?? DEFAULT_GEMINI_MODEL;
   const lang: RequestLang = req.headers.get("X-Language") === "en" ? "en" : "no";
-  return { apiKey, modelId, lang };
+  const thinking = normalizeThinkingLevel(req.headers.get("X-Thinking"));
+  return { apiKey, modelId, lang, thinking };
 }

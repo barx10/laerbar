@@ -1,5 +1,6 @@
 "use client";
 
+import { getStoredThinkingLevel } from "@/lib/thinking";
 import { useEffect, useRef, useState } from "react";
 import { Attempt, Concept, AIResponseStyle } from "@/lib/types";
 import { useLanguage } from "@/lib/language-context";
@@ -36,6 +37,7 @@ async function generateVariants(
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
         "X-Model": model,
+        "X-Thinking": getStoredThinkingLevel(),
         "X-Language": lang,
       },
       body: JSON.stringify({
@@ -126,6 +128,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
         "X-Model": model,
+        "X-Thinking": getStoredThinkingLevel(),
         "X-Language": lang,
       },
       body: JSON.stringify({
@@ -201,6 +204,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
           "X-Model": model,
+          "X-Thinking": getStoredThinkingLevel(),
           "X-Language": lang,
         },
         body: JSON.stringify({
@@ -233,6 +237,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
         "X-Model": model,
+        "X-Thinking": getStoredThinkingLevel(),
         "X-Language": lang,
       },
       body: JSON.stringify({
@@ -277,6 +282,7 @@ export default function LearnTab({ concepts, sourceText, onConceptUpdate }: Prop
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
         "X-Model": model,
+        "X-Thinking": getStoredThinkingLevel(),
         "X-Language": lang,
       },
       body: JSON.stringify({

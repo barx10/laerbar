@@ -28,6 +28,11 @@ export interface Translations {
   settingsKeyMissing: string;
   settingsRemoveKey: string;
   settingsModelLabel: string;
+  settingsThinkingLabel: string;
+  settingsThinkingHint: string;
+  settingsThinkingLow: string;
+  settingsThinkingMedium: string;
+  settingsThinkingHigh: string;
   settingsSave: string;
   settingsCancel: string;
   settingsBackupTitle: string;
@@ -218,6 +223,12 @@ export const no: Translations = {
   settingsKeyMissing: "Ingen nøkkel lagret",
   settingsRemoveKey: "Fjern nøkkel",
   settingsModelLabel: "Modell",
+  settingsThinkingLabel: "Tenkenivå",
+  settingsThinkingHint:
+    "Mer tenking gir ofte bedre svar, men tar lengre tid og bruker flere tokens på din egen API-nøkkel.",
+  settingsThinkingLow: "Rask (anbefalt)",
+  settingsThinkingMedium: "Balansert",
+  settingsThinkingHigh: "Grundig",
   settingsSave: "Lagre",
   settingsCancel: "Avbryt",
   settingsBackupTitle: "Sikkerhetskopi",
@@ -414,6 +425,12 @@ export const en: Translations = {
   settingsKeyMissing: "No key saved",
   settingsRemoveKey: "Remove key",
   settingsModelLabel: "Model",
+  settingsThinkingLabel: "Thinking level",
+  settingsThinkingHint:
+    "More thinking often gives better answers, but takes longer and uses more tokens on your own API key.",
+  settingsThinkingLow: "Fast (recommended)",
+  settingsThinkingMedium: "Balanced",
+  settingsThinkingHigh: "Thorough",
   settingsSave: "Save",
   settingsCancel: "Cancel",
   settingsBackupTitle: "Backup",

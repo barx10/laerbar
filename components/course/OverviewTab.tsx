@@ -1,5 +1,6 @@
 "use client";
 
+import { getStoredThinkingLevel } from "@/lib/thinking";
 import { useEffect, useRef, useState } from "react";
 import { Concept, Course } from "@/lib/types";
 import { isDue, isInReview, isMastered, isUnseen } from "@/lib/srs";
@@ -44,6 +45,7 @@ export default function OverviewTab({ course, onUpdate }: Props) {
         "Content-Type": "application/json",
         "X-API-Key": apiKey,
         "X-Model": model,
+        "X-Thinking": getStoredThinkingLevel(),
         "X-Language": lang,
       },
       body: JSON.stringify({ sourceText: course.source_text }),

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { streamText } from "ai";
 import { guardApiRequest } from "@/lib/api-guard";
 import { getRequestContext } from "@/lib/api-context";
-import { createGeminiModel, GEMINI_FAST_OPTS } from "@/lib/ai";
+import { createGeminiModel, geminiThinkingOpts } from "@/lib/ai";
 import { noDashesInstruction } from "@/lib/prompts";
 
 const SOURCE_TEXT_PROMPT_CAP = 30 * 1024;
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   if (!ctx) {
     return new Response("Mangler API-nøkkel", { status: 401 });
   }
-  const { apiKey, modelId, lang } = ctx;
+  const { apiKey, modelId, lang, thinking } = ctx;
 
   const { concept, conceptAnswer, sourceText, message, history, responseStyle } = await req.json();
   const style: AIResponseStyle = responseStyle ?? "balanced";
@@ -113,7 +113,7 @@ Viktig:
     model,
     system: systemPrompt,
     messages,
-    providerOptions: GEMINI_FAST_OPTS,
+    providerOptions: geminiThinkingOpts(thinking),
   });
 
   return result.toTextStreamResponse();
