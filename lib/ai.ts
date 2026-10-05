@@ -4,7 +4,7 @@ export const DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
 
 export const GEMINI_FAST_OPTS = {
   google: {
-    thinkingConfig: { thinkingLevel: "minimal" },
+    thinkingConfig: { thinkingLevel: "low" },
   },
 } as const;
 
