@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { exportBackup, importBackup, getCourses } from "@/lib/storage";
 import { useLanguage } from "@/lib/language-context";
+import { THINKING_LEVELS, normalizeThinkingLevel, type ThinkingLevel } from "@/lib/thinking";
 
 const MODELS = [
   { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash (anbefalt)" },
@@ -18,6 +19,7 @@ interface Props {
 export default function SettingsModal({ open, onClose }: Props) {
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState<string>(MODELS[0].id);
+  const [thinking, setThinking] = useState<ThinkingLevel>("low");
   const [backupMsg, setBackupMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useLanguage();
@@ -29,6 +31,7 @@ export default function SettingsModal({ open, onClose }: Props) {
       const valid = MODELS.find((m) => m.id === stored) ? stored : MODELS[0].id;
       if (valid !== stored) localStorage.setItem("laerbar_model", valid);
       setModel(valid);
+      setThinking(normalizeThinkingLevel(localStorage.getItem("laerbar_thinking")));
     }
   }, [open]);
 
@@ -39,6 +42,7 @@ export default function SettingsModal({ open, onClose }: Props) {
       localStorage.removeItem("laerbar_google_key");
     }
     localStorage.setItem("laerbar_model", model);
+    localStorage.setItem("laerbar_thinking", thinking);
     onClose();
   }
 
@@ -165,6 +169,34 @@ export default function SettingsModal({ open, onClose }: Props) {
               </label>
             ))}
           </div>
+
+          <label className="text-xs font-semibold text-dg block mt-3 mb-2">{t.settingsThinkingLabel}</label>
+          <div className="flex flex-col gap-1.5">
+            {THINKING_LEVELS.map((level) => (
+              <label
+                key={level}
+                className={`flex items-center gap-2 text-sm px-2.5 py-1.5 rounded cursor-pointer transition-colors ${
+                  !apiKey.trim() ? "opacity-40 cursor-not-allowed" : "hover:bg-black/3"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="thinking"
+                  value={level}
+                  checked={thinking === level}
+                  onChange={() => setThinking(level)}
+                  disabled={!apiKey.trim()}
+                  className="accent-lg"
+                />
+                {level === "low"
+                  ? t.settingsThinkingLow
+                  : level === "medium"
+                    ? t.settingsThinkingMedium
+                    : t.settingsThinkingHigh}
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{t.settingsThinkingHint}</p>
         </div>
 
         <div className="flex gap-2.5 mt-2">

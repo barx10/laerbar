@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { streamText, generateText } from "ai";
 import { guardApiRequest } from "@/lib/api-guard";
 import { getRequestContext } from "@/lib/api-context";
-import { createGeminiModel, GEMINI_FAST_OPTS } from "@/lib/ai";
+import { createGeminiModel, geminiThinkingOpts } from "@/lib/ai";
 import { noDashesInstruction } from "@/lib/prompts";
 
 export async function POST(req: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   if (!ctx) {
     return new Response("Mangler API-nøkkel", { status: 401 });
   }
-  const { apiKey, modelId, lang } = ctx;
+  const { apiKey, modelId, lang, thinking } = ctx;
 
   const body = await req.json();
   const { concept, question, correctAnswer, userAnswer, userElaboration, elaborationQuestion } = body;
@@ -65,7 +65,7 @@ Skriv på norsk.`;
     const result = await generateText({
       model,
       prompt: elaborationPrompt,
-      providerOptions: GEMINI_FAST_OPTS,
+      providerOptions: geminiThinkingOpts(thinking),
     });
 
     return Response.json({ question: result.text.trim() });
@@ -107,7 +107,7 @@ Skriv som naturlig prosa på norsk.`;
   const result = streamText({
     model,
     prompt: feedbackPrompt,
-    providerOptions: GEMINI_FAST_OPTS,
+    providerOptions: geminiThinkingOpts(thinking),
   });
 
   return result.toTextStreamResponse();

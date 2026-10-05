@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { streamText } from "ai";
 import { guardApiRequest } from "@/lib/api-guard";
 import { getRequestContext } from "@/lib/api-context";
-import { createGeminiModel, GEMINI_FAST_OPTS } from "@/lib/ai";
+import { createGeminiModel, geminiThinkingOpts } from "@/lib/ai";
 import { noDashesInstruction } from "@/lib/prompts";
 
 // Skalaen må være entydig for modellen. Tidligere sendte vi bare "3/3",
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   if (!ctx) {
     return new Response("Mangler API-nøkkel", { status: 401 });
   }
-  const { apiKey, modelId, lang } = ctx;
+  const { apiKey, modelId, lang, thinking } = ctx;
 
   const { concept, question, correctAnswer, userAnswer, confidence } = await req.json();
 
@@ -128,7 +128,7 @@ Vær konstruktiv, konkret og menneskelig. Skriv på norsk, alltid i du-form.`;
   const result = streamText({
     model,
     prompt,
-    providerOptions: GEMINI_FAST_OPTS,
+    providerOptions: geminiThinkingOpts(thinking),
   });
 
   return result.toTextStreamResponse();
